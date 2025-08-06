@@ -25,6 +25,35 @@ except Exception as e:
 # API credentials
 API_TOKEN = os.getenv("CARAPI_TOKEN", "YOUR_CARAPI_TOKEN")
 API_SECRET = os.getenv("CARAPI_SECRET", "YOUR_CARAPI_SECRET")
+JWT_TOKEN = None
+
+# Функция для получения JWT
+def get_jwt():
+    global JWT_TOKEN
+    if not API_TOKEN or not API_SECRET:
+        logger.error("API_TOKEN or API_SECRET is missing or empty")
+        return None
+    url = "https://carapi.app/api/auth/login"
+    headers = {
+        "accept": "text/plain",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "api_token": API_TOKEN,
+        "api_secret": API_SECRET
+    }
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        logger.info(f"JWT request status: {response.status_code}, content: {response.text[:500]}... (truncated)")
+        if response.status_code == 200:
+            JWT_TOKEN = response.text
+            return JWT_TOKEN
+        else:
+            logger.error(f"Failed to get JWT: {response.status_code}")
+            return None
+    except Exception as e:
+        logger.error(f"JWT request error: {str(e)}")
+        return None
 
 # Flask: Корневой маршрут
 @app.route("/")
@@ -68,28 +97,19 @@ def favicon():
 @app.route("/api/cars")
 def api_cars():
     logger.info("Accessed api/cars route")
-    if not API_TOKEN or not API_SECRET:
-        logger.error("API_TOKEN or API_SECRET is missing or empty")
-        return {"error": "API credentials not configured"}, 500
-    logger.info(f"API_TOKEN: {API_TOKEN[:5]}... (masked), API_SECRET: {API_SECRET[:5]}... (masked)")
+    if not JWT_TOKEN:
+        logger.info("Getting new JWT...")
+        JWT_TOKEN = get_jwt()
+        if not JWT_TOKEN:
+            return {"error": "Failed to obtain JWT"}, 500
     headers = {
-        'Authorization': f'Bearer {API_TOKEN}',
-        'X-API-KEY': API_SECRET
+        "accept": "application/json",
+        "Authorization": f"Bearer {JWT_TOKEN}"
     }
     try:
-        response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
+        response = requests.get("https://carapi.app/api/models/v2", headers=headers, timeout=10)
         logger.info(f"API response status: {response.status_code}, content: {response.text[:500]}... (truncated)")
-        if response.status_code == 410:
-            logger.error("API endpoint returned 410 Gone. Trying alternative endpoint...")
-            # Попытка альтернативного эндпоинта (если есть документация API)
-            alt_response = requests.get('https://api.carapi.com/v2/cars', headers=headers, timeout=10)
-            if alt_response.status_code == 200:
-                logger.info(f"Alternative endpoint worked: {alt_response.text[:500]}... (truncated)")
-                return alt_response.json()
-            else:
-                logger.error(f"Alternative endpoint failed with status: {alt_response.status_code}")
-                raise Exception(f"API returned status {alt_response.status_code}")
-        elif response.status_code != 200:
+        if response.status_code != 200:
             raise Exception(f"API returned status {response.status_code}")
         return response.json()
     except Exception as e:
@@ -143,48 +163,57 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Используй: /search бренд год_от-год_до цена_от-цена_до тип (например, /search Toyota 2020-2023 2000000-3000000 Sedan)")
         return
     brand = args[0] if args else ""
-    year_range = args[1].split("-") if len(args) > 1 else [0, 9999]
+    year_range = args[1].split("-") if len(args) > 1 else [2015, 2020]  # Ограничение бесплатного плана
     price_range = args[2].split("-") if len(args) > 2 else [0, float("inf")]
     car_type = args[3] if len(args) > 3 else ""
     
+    if not JWT_TOKEN:
+        JWT_TOKEN = get_jwt()
+        if not JWT_TOKEN:
+            await update.message.reply_text("Ошибка аутентификации. Проверь токены.")
+            return
     headers = {
-        'Authorization': f'Bearer {API_TOKEN}',
-        'X-API-KEY': API_SECRET
+        "accept": "application/json",
+        "Authorization": f"Bearer {JWT_TOKEN}"
     }
     params = {
-        'brand': brand,
-        'year_min': year_range[0],
-        'year_max': year_range[1],
-        'price_min': price_range[0],
-        'price_max': price_range[1],
-        'type': car_type
+        "json": json.dumps([
+            {"field": "make", "op": "in", "val": [brand] if brand else []},
+            {"field": "year", "op": ">=", "val": year_range[0]},
+            {"field": "year", "op": "<=", "val": year_range[1]},
+            {"field": "price", "op": ">=", "val": price_range[0]},
+            {"field": "price", "op": "<=", "val": price_range[1]},
+            {"field": "type", "op": "in", "val": [car_type] if car_type else []}
+        ])
     }
     try:
-        response = requests.get('https://api.carapi.com/cars', headers=headers, params=params, timeout=10)
-        cars = response.json().get('results', [])
+        response = requests.get("https://carapi.app/api/models/v2", headers=headers, params=params, timeout=10)
+        cars = response.json().get("data", [])
         if not cars:
             await update.message.reply_text("Автомобили не найдены.")
             return
         for car in cars[:5]:
-            await update.message.reply_photo(
-                photo=car.get('image', ''),
-                caption=f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}\n{car.get('details', '')}"
-            )
+            await update.message.reply_text(f"{car.get('name', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽")
     except Exception as e:
         await update.message.reply_text(f"Ошибка поиска: {e}")
 
 # Telegram: /list
 async def list_cars(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Processing /list command")
+    if not JWT_TOKEN:
+        JWT_TOKEN = get_jwt()
+        if not JWT_TOKEN:
+            await update.message.reply_text("Ошибка аутентификации. Проверь токены.")
+            return
     headers = {
-        'Authorization': f'Bearer {API_TOKEN}',
-        'X-API-KEY': API_SECRET
+        "accept": "application/json",
+        "Authorization": f"Bearer {JWT_TOKEN}"
     }
     try:
-        response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
-        cars = response.json().get('results', [])[:5]
-        message = "Доступные автомобили:\n" + "\n".join([f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}" for car in cars])
-        keyboard = [[InlineKeyboardButton("Далее", callback_data="next_0")]] if len(cars) > 5 else []
+        response = requests.get("https://carapi.app/api/models/v2", headers=headers, params={"limit": 5}, timeout=10)
+        cars = response.json().get("data", [])
+        message = "Доступные автомобили:\n" + "\n".join([f"{car.get('name', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽" for car in cars])
+        keyboard = [[InlineKeyboardButton("Далее", callback_data="next_0")]] if response.json().get("collection", {}).get("pages", 1) > 1 else []
         await update.message.reply_text(message or "Автомобили не найдены.", reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception as e:
         await update.message.reply_text(f"Ошибка загрузки: {e}")
@@ -204,25 +233,26 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Telegram: /game
 async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Processing /game command")
+    if not JWT_TOKEN:
+        JWT_TOKEN = get_jwt()
+        if not JWT_TOKEN:
+            await update.message.reply_text("Ошибка аутентификации. Проверь токены.")
+            return
     headers = {
-        'Authorization': f'Bearer {API_TOKEN}',
-        'X-API-KEY': API_SECRET
+        "accept": "application/json",
+        "Authorization": f"Bearer {JWT_TOKEN}"
     }
     try:
-        response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
-        cars = response.json().get('results', [])
+        response = requests.get("https://carapi.app/api/models/v2", headers=headers, params={"limit": 10}, timeout=10)
+        cars = response.json().get("data", [])
         if not cars:
             await update.message.reply_text("Автомобили не найдены.")
             return
         car = random.choice(cars)
         options = random.sample(cars, min(3, len(cars)-1)) + [car]
         random.shuffle(options)
-        keyboard = [[InlineKeyboardButton(f"{c.get('brand', '')} {c.get('model', '')}", callback_data="correct" if c == car else "wrong")] for c in options]
-        await update.message.reply_photo(
-            photo=car.get('image', ''),
-            caption="Угадай автомобиль!",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        keyboard = [[InlineKeyboardButton(f"{c.get('name', '')}", callback_data="correct" if c == car else "wrong")] for c in options]
+        await update.message.reply_text("Угадай автомобиль!", reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception as e:
         await update.message.reply_text(f"Ошибка игры: {e}")
 
@@ -242,34 +272,39 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("Выбери бренд:", reply_markup=InlineKeyboardMarkup(keyboard))
     elif query.data.startswith("search_"):
         brand = query.data.split("_")[1]
+        if not JWT_TOKEN:
+            JWT_TOKEN = get_jwt()
+            if not JWT_TOKEN:
+                await query.message.reply_text("Ошибка аутентификации. Проверь токены.")
+                return
         headers = {
-            'Authorization': f'Bearer {API_TOKEN}',
-            'X-API-KEY': API_SECRET
+            "accept": "application/json",
+            "Authorization": f"Bearer {JWT_TOKEN}"
         }
-        params = {'brand': brand}
+        params = {"json": json.dumps([{"field": "make", "op": "in", "val": [brand]}])}
         try:
-            response = requests.get('https://api.carapi.com/cars', headers=headers, params=params, timeout=10)
-            cars = response.json().get('results', [])
+            response = requests.get("https://carapi.app/api/models/v2", headers=headers, params=params, timeout=10)
+            cars = response.json().get("data", [])
             for car in cars[:5]:
-                await query.message.reply_photo(
-                    photo=car.get('image', ''),
-                    caption=f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}\n{car.get('details', '')}"
-                )
+                await query.message.reply_text(f"{car.get('name', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽")
         except Exception as e:
             await query.message.reply_text(f"Ошибка поиска: {e}")
     elif query.data.startswith("next_"):
         page = int(query.data.split("_")[1]) + 1
+        if not JWT_TOKEN:
+            JWT_TOKEN = get_jwt()
+            if not JWT_TOKEN:
+                await query.message.reply_text("Ошибка аутентификации. Проверь токены.")
+                return
         headers = {
-            'Authorization': f'Bearer {API_TOKEN}',
-            'X-API-KEY': API_SECRET
+            "accept": "application/json",
+            "Authorization": f"Bearer {JWT_TOKEN}"
         }
         try:
-            response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
-            cars = response.json().get('results', [])
-            start = page * 5
-            filtered = cars[start:start+5]
-            message = "\n".join([f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}" for car in filtered])
-            keyboard = [[InlineKeyboardButton("Далее", callback_data=f"next_{page}")]] if start + 5 < len(cars) else []
+            response = requests.get("https://carapi.app/api/models/v2", headers=headers, params={"page": page, "limit": 5}, timeout=10)
+            cars = response.json().get("data", [])
+            message = "\n".join([f"{car.get('name', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽" for car in cars])
+            keyboard = [[InlineKeyboardButton("Далее", callback_data=f"next_{page}")]] if response.json().get("collection", {}).get("pages", 1) > page else []
             await query.message.reply_text(message or "Больше нет автомобилей.", reply_markup=InlineKeyboardMarkup(keyboard))
         except Exception as e:
             await query.message.reply_text(f"Ошибка загрузки: {e}")
