@@ -13,8 +13,6 @@ const App = () => {
       .then(data => setCars(data.results || []));
     window.Telegram.WebApp.ready();
     window.Telegram.WebApp.expand();
-    window.Telegram.WebApp.setHeaderColor({ color_key: 'bg_color' });
-    window.Telegram.WebApp.setBottomBarColor({ color: '#ffffff' });
   }, []);
 
   const handleFilterChange = (e) => {

@@ -51,7 +51,7 @@ def set_webhook_manual():
         logger.error("Application not initialized")
         return {"status": "error", "message": "Application not initialized"}, 500
     try:
-        webhook_url = "https://cars-c8iv85h7i-alexeys-projects-c244334f.vercel.app/webhook"
+        webhook_url = "https://cars-dun-phi.vercel.app/webhook"
         application.bot.set_webhook(webhook_url)
         logger.info(f"Webhook set to: {webhook_url}")
         return {"status": "ok", "message": f"Webhook set to {webhook_url}"}
@@ -68,12 +68,14 @@ def favicon():
 @app.route("/api/cars")
 def api_cars():
     logger.info("Accessed api/cars route")
+    logger.info(f"API_TOKEN: {API_TOKEN}, API_SECRET: {API_SECRET}")
     headers = {
         'Authorization': f'Bearer {API_TOKEN}',
         'X-API-KEY': API_SECRET
     }
     try:
         response = requests.get('https://api.carapi.com/cars', headers=headers)
+        logger.info(f"API response status: {response.status_code}, content: {response.text}")
         return response.json()
     except Exception as e:
         logger.error(f"API error: {e}")
@@ -113,7 +115,7 @@ async def webhook():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Processing /start command")
     keyboard = [
-        [InlineKeyboardButton("Открыть Car Finder", web_app={"url": "https://cars-c8iv85h7i-alexeys-projects-c244334f.vercel.app/webapp"})],
+        [InlineKeyboardButton("Открыть Car Finder", web_app={"url": "https://cars-dun-phi.vercel.app/webapp"})],
         [InlineKeyboardButton("Популярные бренды", callback_data="brands")]
     ]
     await update.message.reply_text("Добро пожаловать в Car Finder! Открой Mini App или выбери бренд.", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -263,7 +265,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Настройка webhook
 async def set_webhook():
-    webhook_url = "https://cars-c8iv85h7i-alexeys-projects-c244334f.vercel.app/webhook"
+    webhook_url = "https://cars-dun-phi.vercel.app/webhook"
     logger.info(f"Setting webhook: {webhook_url}")
     if not application:
         logger.error("Application not initialized")
