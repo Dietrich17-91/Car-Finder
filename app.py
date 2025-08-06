@@ -8,16 +8,12 @@ from flask import Flask, request, render_template_string
 # Flask app для Mini App и webhook
 app = Flask(__name__)
 
-# Тестовые данные
+# Тестовые данные в памяти
 cars = [
     {"id": 1, "brand": "Toyota", "model": "Camry", "year": 2020, "price": 25000, "type": "Sedan", "photo": "https://via.placeholder.com/150?text=Toyota+Camry"},
     {"id": 2, "brand": "Honda", "model": "Civic", "year": 2018, "price": 20000, "type": "Sedan", "photo": "https://via.placeholder.com/150?text=Honda+Civic"},
     {"id": 3, "brand": "Ford", "model": "Explorer", "year": 2022, "price": 35000, "type": "SUV", "photo": "https://via.placeholder.com/150?text=Ford+Explorer"}
 ]
-
-# Сохранение данных
-with open("cars.json", "w") as f:
-    json.dump(cars, f)
 
 # Telegram bot token
 TOKEN = os.getenv("TOKEN", "YOUR_BOT_TOKEN_HERE")
@@ -85,8 +81,6 @@ def filter_cars():
     brand = request.args.get("brand", "").lower()
     max_price = request.args.get("maxPrice", float("inf"), type=float)
     year = request.args.get("year", 0, type=int)
-    with open("cars.json", "r") as f:
-        cars = json.load(f)
     filtered = [
         car for car in cars
         if (not brand or brand in car["brand"].lower()) and
@@ -132,8 +126,6 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     price_range = args[2].split("-") if len(args) > 2 else [0, float("inf")]
     car_type = args[3] if len(args) > 3 else ""
     
-    with open("cars.json", "r") as f:
-        cars = json.load(f)
     filtered = [
         car for car in cars
         if (not brand or brand.lower() in car["brand"].lower()) and
@@ -149,13 +141,11 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for car in filtered[:5]:
         await update.message.reply_photo(
             photo=car["photo"],
-            caption=f"{car['brand']} {car['model']} ({car['year']}) - ${car['price']} - {car['type']}"
+            caption=f"{car['brand']} {car['model']} (${car['year']}) - ${car['price']} - {car['type']}"
         )
 
 # Telegram: /list
 async def list_cars(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    with open("cars.json", "r") as f:
-        cars = json.load(f)
     message = "Доступные автомобили:\n" + "\n".join([f"{car['brand']} {car['model']} ({car['year']}) - ${car['price']} - {car['type']}" for car in cars[:5]])
     keyboard = [[InlineKeyboardButton("Далее", callback_data="next_0")]] if len(cars) > 5 else []
     await update.message.reply_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -188,8 +178,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("Выбери бренд:", reply_markup=InlineKeyboardMarkup(keyboard))
     elif query.data.startswith("search_"):
         brand = query.data.split("_")[1]
-        with open("cars.json", "r") as f:
-            cars = json.load(f)
         filtered = [car for car in cars if brand.lower() in car["brand"].lower()]
         for car in filtered[:5]:
             await query.message.reply_photo(
@@ -198,8 +186,6 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
     elif query.data.startswith("next_"):
         page = int(query.data.split("_")[1]) + 1
-        with open("cars.json", "r") as f:
-            cars = json.load(f)
         start = page * 5
         filtered = cars[start:start+5]
         message = "\n".join([f"{car['brand']} {car['model']} ({car['year']}) - ${car['price']} - {car['type']}" for car in filtered])
