@@ -14,63 +14,6 @@ logger = logging.getLogger(__name__)
 # Flask app
 app = Flask(__name__)
 
-# Тестовые данные (49 автомобилей с двумя фото для Swiper)
-car_photos = [
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Toyota_RAV4_HYBRID_Adventure_%286AA-AXAH54-ANXVB%29_front.jpg/1200px-Toyota_RAV4_HYBRID_Adventure_%286AA-AXAH54-ANXVB%29_front.jpg",
-    "https://s0.rbk.ru/v6_top_pics/media/img/9/91/347478182948919.jpeg"
-]
-cars = [
-    {"id": 1, "brand": "Toyota", "model": "Camry", "year": 2020, "price": 2500000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 200 л.с., Объём двигателя: 2.5 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 2, "brand": "Honda", "model": "Civic", "year": 2018, "price": 1800000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 158 л.с., Объём двигателя: 2.0 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 3, "brand": "Ford", "model": "Explorer", "year": 2022, "price": 3500000, "type": "SUV", "photos": car_photos, "details": "Мощность: 300 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 4, "brand": "BMW", "model": "X5", "year": 2021, "price": 4500000, "type": "SUV", "photos": car_photos, "details": "Мощность: 340 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Дизель"},
-    {"id": 5, "brand": "Mercedes", "model": "C-Class", "year": 2019, "price": 3800000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 255 л.с., Объём двигателя: 2.0 л, Привод: Задний, Топливо: Бензин"},
-    {"id": 6, "brand": "Audi", "model": "A4", "year": 2020, "price": 3600000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 190 л.с., Объём двигателя: 2.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 7, "brand": "Tesla", "model": "Model 3", "year": 2023, "price": 4200000, "type": "Electric", "photos": car_photos, "details": "Мощность: 306 л.с., Запас хода: 500 км, Привод: Задний, Топливо: Электричество"},
-    {"id": 8, "brand": "Volkswagen", "model": "Tiguan", "year": 2021, "price": 3200000, "type": "SUV", "photos": car_photos, "details": "Мощность: 220 л.с., Объём двигателя: 2.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 9, "brand": "Hyundai", "model": "Tucson", "year": 2020, "price": 2800000, "type": "SUV", "photos": car_photos, "details": "Мощность: 180 л.с., Объём двигателя: 2.0 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 10, "brand": "Chevrolet", "model": "Equinox", "year": 2019, "price": 2600000, "type": "SUV", "photos": car_photos, "details": "Мощность: 170 л.с., Объём двигателя: 1.5 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 11, "brand": "Lexus", "model": "RX", "year": 2022, "price": 4800000, "type": "SUV", "photos": car_photos, "details": "Мощность: 295 л.с., Объём двигателя: 3.5 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 12, "brand": "Porsche", "model": "Cayenne", "year": 2021, "price": 6500000, "type": "SUV", "photos": car_photos, "details": "Мощность: 340 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 13, "brand": "Nissan", "model": "Altima", "year": 2020, "price": 2400000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 188 л.с., Объём двигателя: 2.5 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 14, "brand": "Subaru", "model": "Outback", "year": 2022, "price": 3400000, "type": "SUV", "photos": car_photos, "details": "Мощность: 260 л.с., Объём двигателя: 2.4 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 15, "brand": "Kia", "model": "Sportage", "year": 2021, "price": 2700000, "type": "SUV", "photos": car_photos, "details": "Мощность: 181 л.с., Объём двигателя: 2.0 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 16, "brand": "Mazda", "model": "CX-5", "year": 2020, "price": 3000000, "type": "SUV", "photos": car_photos, "details": "Мощность: 187 л.с., Объём двигателя: 2.5 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 17, "brand": "Jeep", "model": "Wrangler", "year": 2023, "price": 4000000, "type": "SUV", "photos": car_photos, "details": "Мощность: 285 л.с., Объём двигателя: 3.6 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 18, "brand": "Volvo", "model": "XC90", "year": 2021, "price": 5000000, "type": "SUV", "photos": car_photos, "details": "Мощность: 316 л.с., Объём двигателя: 2.0 л, Привод: Полный, Топливо: Гибрид"},
-    {"id": 19, "brand": "Jaguar", "model": "F-Pace", "year": 2020, "price": 4600000, "type": "SUV", "photos": car_photos, "details": "Мощность: 250 л.с., Объём двигателя: 2.0 л, Привод: Полный, Топливо: Дизель"},
-    {"id": 20, "brand": "Land Rover", "model": "Range Rover", "year": 2022, "price": 7000000, "type": "SUV", "photos": car_photos, "details": "Мощность: 400 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Дизель"},
-    {"id": 21, "brand": "Toyota", "model": "Corolla", "year": 2019, "price": 2200000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 132 л.с., Объём двигателя: 1.8 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 22, "brand": "Honda", "model": "Accord", "year": 2021, "price": 2900000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 192 л.с., Объём двигателя: 1.5 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 23, "brand": "Ford", "model": "Mustang", "year": 2023, "price": 3800000, "type": "Coupe", "photos": car_photos, "details": "Мощность: 450 л.с., Объём двигателя: 5.0 л, Привод: Задний, Топливо: Бензин"},
-    {"id": 24, "brand": "BMW", "model": "3 Series", "year": 2020, "price": 4000000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 255 л.с., Объём двигателя: 2.0 л, Привод: Задний, Топливо: Бензин"},
-    {"id": 25, "brand": "Mercedes", "model": "E-Class", "year": 2021, "price": 4800000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 362 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Гибрид"},
-    {"id": 26, "brand": "Audi", "model": "Q5", "year": 2022, "price": 4300000, "type": "SUV", "photos": car_photos, "details": "Мощность: 261 л.с., Объём двигателя: 2.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 27, "brand": "Tesla", "model": "Model Y", "year": 2023, "price": 5000000, "type": "Electric", "photos": car_photos, "details": "Мощность: 346 л.с., Запас хода: 480 км, Привод: Полный, Топливо: Электричество"},
-    {"id": 28, "brand": "Volkswagen", "model": "Passat", "year": 2019, "price": 2600000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 174 л.с., Объём двигателя: 2.0 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 29, "brand": "Hyundai", "model": "Sonata", "year": 2020, "price": 2700000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 191 л.с., Объём двигателя: 2.5 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 30, "brand": "Chevrolet", "model": "Malibu", "year": 2021, "price": 2800000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 160 л.с., Объём двигателя: 1.5 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 31, "brand": "Lexus", "model": "ES", "year": 2020, "price": 3900000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 203 л.с., Объём двигателя: 2.5 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 32, "brand": "Porsche", "model": "911", "year": 2023, "price": 9000000, "type": "Coupe", "photos": car_photos, "details": "Мощность: 450 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 33, "brand": "Nissan", "model": "Rogue", "year": 2022, "price": 3100000, "type": "SUV", "photos": car_photos, "details": "Мощность: 201 л.с., Объём двигателя: 1.5 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 34, "brand": "Subaru", "model": "Forester", "year": 2021, "price": 3200000, "type": "SUV", "photos": car_photos, "details": "Мощность: 182 л.с., Объём двигателя: 2.5 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 35, "brand": "Kia", "model": "Telluride", "year": 2023, "price": 3800000, "type": "SUV", "photos": car_photos, "details": "Мощность: 291 л.с., Объём двигателя: 3.8 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 36, "brand": "Mazda", "model": "3", "year": 2020, "price": 2500000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 191 л.с., Объём двигателя: 2.5 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 37, "brand": "Jeep", "model": "Grand Cherokee", "year": 2022, "price": 4500000, "type": "SUV", "photos": car_photos, "details": "Мощность: 293 л.с., Объём двигателя: 3.6 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 38, "brand": "Volvo", "model": "XC60", "year": 2021, "price": 4200000, "type": "SUV", "photos": car_photos, "details": "Мощность: 250 л.с., Объём двигателя: 2.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 39, "brand": "Jaguar", "model": "E-Pace", "year": 2020, "price": 4100000, "type": "SUV", "photos": car_photos, "details": "Мощность: 200 л.с., Объём двигателя: 2.0 л, Привод: Полный, Топливо: Дизель"},
-    {"id": 40, "brand": "Land Rover", "model": "Discovery", "year": 2022, "price": 6000000, "type": "SUV", "photos": car_photos, "details": "Мощность: 296 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Дизель"},
-    {"id": 41, "brand": "Toyota", "model": "RAV4", "year": 2021, "price": 3100000, "type": "SUV", "photos": car_photos, "details": "Мощность: 203 л.с., Объём двигателя: 2.5 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 42, "brand": "Honda", "model": "CR-V", "year": 2022, "price": 3300000, "type": "SUV", "photos": car_photos, "details": "Мощность: 190 л.с., Объём двигателя: 1.5 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 43, "brand": "Ford", "model": "F-150", "year": 2023, "price": 4500000, "type": "Pickup", "photos": car_photos, "details": "Мощность: 400 л.с., Объём двигателя: 3.5 л, Привод: Полный, Топливо: Гибрид"},
-    {"id": 44, "brand": "BMW", "model": "5 Series", "year": 2020, "price": 4700000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 335 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 45, "brand": "Mercedes", "model": "GLC", "year": 2021, "price": 4400000, "type": "SUV", "photos": car_photos, "details": "Мощность: 255 л.с., Объём двигателя: 2.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 46, "brand": "Audi", "model": "Q7", "year": 2022, "price": 5200000, "type": "SUV", "photos": car_photos, "details": "Мощность: 335 л.с., Объём двигателя: 3.0 л, Привод: Полный, Топливо: Бензин"},
-    {"id": 47, "brand": "Tesla", "model": "Model S", "year": 2023, "price": 8000000, "type": "Electric", "photos": car_photos, "details": "Мощность: 670 л.с., Запас хода: 652 км, Привод: Полный, Топливо: Электричество"},
-    {"id": 48, "brand": "Volkswagen", "model": "Jetta", "year": 2019, "price": 2300000, "type": "Sedan", "photos": car_photos, "details": "Мощность: 147 л.с., Объём двигателя: 1.4 л, Привод: Передний, Топливо: Бензин"},
-    {"id": 49, "brand": "Hyundai", "model": "Kona", "year": 2021, "price": 2600000, "type": "SUV", "photos": car_photos, "details": "Мощность: 147 л.с., Объём двигателя: 2.0 л, Привод: Передний, Топливо: Бензин"},
-]
-
 # Telegram bot token
 TOKEN = os.getenv("TOKEN", "YOUR_BOT_TOKEN_HERE")
 try:
@@ -79,6 +22,10 @@ try:
 except Exception as e:
     logger.error(f"Failed to initialize Telegram Application: {e}")
     application = None
+
+# API credentials
+API_TOKEN = os.getenv("CARAPI_TOKEN", "YOUR_CARAPI_TOKEN")
+API_SECRET = os.getenv("CARAPI_SECRET", "YOUR_CARAPI_SECRET")
 
 # Flask: Корневой маршрут
 @app.route("/")
@@ -130,161 +77,49 @@ def webapp():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Car Finder</title>
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" rel="stylesheet">
-        <style>
-            body { 
-                font-family: 'Arial', sans-serif; 
-                background: linear-gradient(135deg, #1e3a8a, #3b82f6); 
-                margin: 0; 
-                padding: 0; 
-            }
-            .container { 
-                max-width: 1280px; 
-                margin: 0 auto; 
-                padding: 20px; 
-            }
-            .car-card { 
-                transition: transform 0.3s ease, box-shadow 0.3s ease; 
-                border-radius: 12px; 
-                overflow: hidden; 
-            }
-            .car-card:hover { 
-                transform: translateY(-5px); 
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); 
-            }
-            .pagination-btn { 
-                transition: background-color 0.3s ease, transform 0.2s ease; 
-                border-radius: 8px; 
-            }
-            .pagination-btn:hover { 
-                background-color: #1d4ed8; 
-                transform: scale(1.05); 
-            }
-            .select2-container--default .select2-selection--single { 
-                border-radius: 8px; 
-                border: 1px solid #d1d5db; 
-                padding: 8px; 
-                height: 40px; 
-                background: #fff; 
-            }
-            .select2-container--default .select2-selection--single .select2-selection__rendered {
-                line-height: 24px;
-                color: #1f2937;
-            }
-            .select2-container--default .select2-selection--single .select2-selection__arrow { 
-                height: 38px; 
-            }
-            .select2-dropdown { 
-                border-radius: 8px; 
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
-                border: none; 
-            }
-            .select2-results__option:hover { 
-                background-color: #e0f2fe; 
-            }
-            .noUi-handle { 
-                background: #3b82f6; 
-                border-radius: 50%; 
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
-            }
-            .noUi-connect { 
-                background: #3b82f6; 
-            }
-            .noUi-tooltip { 
-                background: #1e3a8a; 
-                color: #fff; 
-                border-radius: 4px; 
-                padding: 4px 8px; 
-            }
-            .swiper-container { 
-                height: 200px; 
-                border-radius: 8px; 
-                overflow: hidden; 
-            }
-            .swiper-slide img { 
-                width: 100%; 
-                height: 100%; 
-                object-fit: cover; 
-            }
-            .modal-content { 
-                max-height: 80vh; 
-                overflow-y: auto; 
-            }
-        </style>
+        <script src="https://cdn.tailwindcss.com"></script>
     </head>
-    <body>
-        <div class="container">
-            <h1 class="text-4xl font-extrabold text-center text-white mb-8">Car Finder 🚗</h1>
+    <body class="bg-gradient-to-br from-blue-900 to-blue-500 text-white font-sans">
+        <div class="container mx-auto p-4 max-w-5xl">
+            <h1 class="text-4xl font-extrabold text-center mb-8 animate-fade-in">Car Finder 🚗</h1>
             
             <!-- Фильтры -->
-            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white/10 backdrop-blur-md p-6 rounded-xl mb-8 animate-slide-up">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Бренд</label>
-                        <select id="brand" class="w-full">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Бренд</label>
+                        <select id="brand" class="w-full p-2 border border-gray-600 rounded-lg bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="">Все бренды</option>
-                            <option value="Toyota">Toyota</option>
-                            <option value="Honda">Honda</option>
-                            <option value="Ford">Ford</option>
-                            <option value="BMW">BMW</option>
-                            <option value="Mercedes">Mercedes</option>
-                            <option value="Audi">Audi</option>
-                            <option value="Tesla">Tesla</option>
-                            <option value="Volkswagen">Volkswagen</option>
-                            <option value="Hyundai">Hyundai</option>
-                            <option value="Chevrolet">Chevrolet</option>
-                            <option value="Lexus">Lexus</option>
-                            <option value="Porsche">Porsche</option>
-                            <option value="Nissan">Nissan</option>
-                            <option value="Subaru">Subaru</option>
-                            <option value="Kia">Kia</option>
-                            <option value="Mazda">Mazda</option>
-                            <option value="Jeep">Jeep</option>
-                            <option value="Volvo">Volvo</option>
-                            <option value="Jaguar">Jaguar</option>
-                            <option value="Land Rover">Land Rover</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Тип</label>
-                        <select id="type" class="w-full">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Тип</label>
+                        <select id="type" class="w-full p-2 border border-gray-600 rounded-lg bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="">Все типы</option>
-                            <option value="Sedan">Седан</option>
-                            <option value="SUV">Внедорожник</option>
-                            <option value="Coupe">Купе</option>
-                            <option value="Electric">Электромобиль</option>
-                            <option value="Pickup">Пикап</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Год</label>
-                        <select id="year" class="w-full">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Год</label>
+                        <select id="year" class="w-full p-2 border border-gray-600 rounded-lg bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="">Все годы</option>
-                            <option value="2023">2023</option>
-                            <option value="2022">2022</option>
-                            <option value="2021">2021</option>
-                            <option value="2020">2020</option>
-                            <option value="2019">2019</option>
-                            <option value="2018">2018</option>
                         </select>
                     </div>
                 </div>
                 <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Макс. цена (₽)</label>
-                    <div id="priceSlider" class="mb-4"></div>
-                    <div class="slider-value text-gray-700" id="priceValue">10,000,000 ₽</div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Цена (₽)</label>
+                    <div class="w-full h-2 bg-gray-600 rounded-full relative">
+                        <div id="price-range" class="h-2 bg-blue-500 rounded-full absolute"></div>
+                        <div id="price-thumb-left" class="w-4 h-4 bg-blue-500 rounded-full absolute -top-1 cursor-pointer transform -translate-x-1/2"></div>
+                        <div id="price-thumb-right" class="w-4 h-4 bg-blue-500 rounded-full absolute -top-1 cursor-pointer transform -translate-x-1/2"></div>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-400 mt-2">
+                        <span id="min-price">0</span>
+                        <span id="max-price">10,000,000</span>
+                    </div>
                 </div>
                 <div class="mt-6 flex space-x-4">
-                    <button onclick="filterCars(1)" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold">Фильтровать</button>
-                    <button onclick="resetFilters()" class="bg-gray-300 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-400 transition font-semibold">Сбросить</button>
+                    <button onclick="filterCars(1)" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105">Фильтровать</button>
+                    <button onclick="resetFilters()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105">Сбросить</button>
                 </div>
             </div>
 
@@ -295,20 +130,14 @@ def webapp():
             <div id="pagination" class="flex justify-center space-x-2 mt-8"></div>
 
             <!-- Модальное окно для деталей -->
-            <div id="modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center">
-                <div class="bg-white p-8 rounded-xl max-w-lg w-full modal-content relative">
+            <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+                <div class="bg-white p-6 rounded-xl max-w-lg w-full relative animate-fade-in-scale">
                     <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-                    <h2 id="modal-title" class="text-2xl font-bold mb-4"></h2>
-                    <div class="swiper-container">
-                        <div class="swiper-wrapper" id="modal-photos"></div>
-                        <div class="swiper-pagination"></div>
-                    </div>
-                    <p id="modal-details" class="text-gray-700 whitespace-pre-line mt-4"></p>
-                    <div class="mt-4">
-                        <h3 class="text-lg font-semibold">Характеристики:</h3>
-                        <ul id="modal-specs" class="list-disc pl-5 text-gray-600"></ul>
-                    </div>
-                    <button onclick="closeModal()" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">Закрыть</button>
+                    <h2 id="modal-title" class="text-2xl font-bold mb-4 text-gray-800"></h2>
+                    <p id="modal-details" class="text-gray-700 whitespace-pre-line mb-4"></p>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Характеристики:</h3>
+                    <ul id="modal-specs" class="list-disc pl-5 text-gray-600"></ul>
+                    <button onclick="closeModal()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">Закрыть</button>
                 </div>
             </div>
 
@@ -319,58 +148,122 @@ def webapp():
                 window.Telegram.WebApp.setHeaderColor({ color_key: 'bg_color' });
                 window.Telegram.WebApp.setBottomBarColor({ color: '#ffffff' });
 
-                // Инициализация Select2
-                $(document).ready(function() {
-                    $('#brand').select2({ 
-                        placeholder: 'Выберите бренд', 
-                        allowClear: true,
-                        width: '100%'
-                    });
-                    $('#type').select2({ 
-                        placeholder: 'Выберите тип', 
-                        allowClear: true,
-                        width: '100%'
-                    });
-                    $('#year').select2({ 
-                        placeholder: 'Выберите год', 
-                        allowClear: true,
-                        width: '100%'
-                    });
-                });
-
-                // Инициализация noUISlider
-                const priceSlider = document.getElementById('priceSlider');
-                const priceValue = document.getElementById('priceValue');
-                noUiSlider.create(priceSlider, {
-                    start: 10000000,
-                    connect: 'lower',
-                    range: { 'min': 0, 'max': 10000000 },
-                    step: 100000,
-                    format: { 
-                        to: value => Math.round(value), 
-                        from: value => Number(value) 
-                    },
-                    tooltips: true
-                });
-                priceSlider.noUiSlider.on('update', function(values, handle) {
-                    priceValue.textContent = values[handle].toLocaleString('ru-RU') + ' ₽';
-                });
-
+                let cars = [];
                 let currentPage = 1;
                 const carsPerPage = 9;
-                const cars = JSON.parse('""" + json.dumps(cars).replace("'", "\\'") + """');
+                const minPrice = 0;
+                const maxPrice = 10000000;
 
+                // Загрузка данных из carapi
+                async function loadCars() {
+                    try {
+                        const response = await fetch('https://api.carapi.com/cars', {
+                            headers: {
+                                'Authorization': `Bearer ${API_TOKEN}`,
+                                'X-API-KEY': API_SECRET
+                            }
+                        });
+                        const data = await response.json();
+                        cars = data.results || [];
+                        populateFilters();
+                        filterCars(1);
+                    } catch (error) {
+                        console.error('Ошибка загрузки данных:', error);
+                    }
+                }
+
+                // Динамическое заполнение фильтров
+                function populateFilters() {
+                    const brands = [...new Set(cars.map(car => car.brand))].sort();
+                    const types = [...new Set(cars.map(car => car.type))].sort();
+                    const years = [...new Set(cars.map(car => car.year))].sort((a, b) => b - a);
+
+                    const brandSelect = document.getElementById('brand');
+                    const typeSelect = document.getElementById('type');
+                    const yearSelect = document.getElementById('year');
+
+                    brands.forEach(brand => {
+                        const option = document.createElement('option');
+                        option.value = brand;
+                        option.textContent = brand;
+                        brandSelect.appendChild(option);
+                    });
+
+                    types.forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type;
+                        option.textContent = type;
+                        typeSelect.appendChild(option);
+                    });
+
+                    years.forEach(year => {
+                        const option = document.createElement('option');
+                        option.value = year;
+                        option.textContent = year;
+                        yearSelect.appendChild(option);
+                    });
+                }
+
+                // Слайдер цены
+                const slider = document.querySelector('.price-slider');
+                const range = document.getElementById('price-range');
+                const thumbLeft = document.getElementById('price-thumb-left');
+                const thumbRight = document.getElementById('price-thumb-right');
+                const minPriceDisplay = document.getElementById('min-price');
+                const maxPriceDisplay = document.getElementById('max-price');
+
+                let isDraggingLeft = false;
+                let isDraggingRight = false;
+                let leftPos = 0;
+                let rightPos = 100;
+
+                function updateRange() {
+                    range.style.left = `${leftPos}%`;
+                    range.style.width = `${rightPos - leftPos}%`;
+                    thumbLeft.style.left = `${leftPos}%`;
+                    thumbRight.style.left = `${rightPos}%`;
+                    minPriceDisplay.textContent = Math.round((leftPos / 100) * maxPrice).toLocaleString('ru-RU');
+                    maxPriceDisplay.textContent = Math.round((rightPos / 100) * maxPrice).toLocaleString('ru-RU');
+                }
+
+                thumbLeft.addEventListener('mousedown', () => isDraggingLeft = true);
+                thumbRight.addEventListener('mousedown', () => isDraggingRight = true);
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDraggingLeft && !isDraggingRight) return;
+                    const rect = slider.getBoundingClientRect();
+                    const position = Math.min(Math.max(0, (e.clientX - rect.left) / rect.width * 100), 100);
+                    if (isDraggingLeft) {
+                        leftPos = Math.min(position, rightPos - 1);
+                        if (leftPos < 0) leftPos = 0;
+                    } else if (isDraggingRight) {
+                        rightPos = Math.max(position, leftPos + 1);
+                        if (rightPos > 100) rightPos = 100;
+                    }
+                    updateRange();
+                });
+
+                document.addEventListener('mouseup', () => {
+                    isDraggingLeft = false;
+                    isDraggingRight = false;
+                });
+
+                // Фильтрация
                 function filterCars(page = 1) {
                     const brand = document.getElementById('brand').value;
                     const type = document.getElementById('type').value;
                     const year = document.getElementById('year').value;
-                    const maxPrice = priceSlider.noUiSlider.get();
-                    const filtered = cars.filter(car =>
-                        (!brand || car.brand.toLowerCase().includes(brand.toLowerCase())) &&
-                        (!type || car.type.toLowerCase().includes(type.toLowerCase())) &&
-                        (!year || car.year == year) &&
-                        car.price <= maxPrice
-                    );
+                    const minPriceValue = (leftPos / 100) * maxPrice;
+                    const maxPriceValue = (rightPos / 100) * maxPrice;
+
+                    const filtered = cars.filter(car => {
+                        const matchesBrand = !brand || car.brand.toLowerCase().includes(brand.toLowerCase());
+                        const matchesType = !type || car.type.toLowerCase().includes(type.toLowerCase());
+                        const matchesYear = !year || car.year == year;
+                        const matchesPrice = car.price >= minPriceValue && car.price <= maxPriceValue;
+                        return matchesBrand && matchesType && matchesYear && matchesPrice;
+                    });
+
                     currentPage = page;
                     displayCars(filtered, page);
                     displayPagination(filtered);
@@ -383,64 +276,40 @@ def webapp():
                     let html = '';
                     paginatedCars.forEach(car => {
                         html += `
-                            <div class="car-card bg-white p-5 rounded-xl shadow-lg" style="opacity: 0; transform: translateY(20px);">
-                                <div class="swiper-container">
-                                    <div class="swiper-wrapper">
-                                        ${car.photos.map(photo => `<div class="swiper-slide"><img src="${photo}" alt="${car.brand} ${car.model}"></div>`).join('')}
-                                    </div>
-                                    <div class="swiper-pagination"></div>
-                                </div>
-                                <h3 class="text-xl font-semibold text-gray-800 mt-3">${car.brand} ${car.model}</h3>
-                                <p class="text-gray-600">${car.year} | ${car.type} | ${car.price.toLocaleString('ru-RU')} ₽</p>
-                                <button onclick="showModal(${car.id})" class="mt-3 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">Подробнее</button>
+                            <div class="bg-white/10 backdrop-blur-md p-4 rounded-xl text-center transition-transform duration-300 hover:scale-105 animate-fade-in-up">
+                                <h3 class="text-xl font-semibold">${car.brand} ${car.model}</h3>
+                                <p class="text-gray-300">${car.year} | ${car.type} | ${car.price.toLocaleString('ru-RU')} ₽</p>
+                                <button onclick="showModal(${JSON.stringify(car)})" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300">Подробнее</button>
                             </div>
                         `;
                     });
                     document.getElementById('results').innerHTML = html;
-                    document.querySelectorAll('.swiper-container').forEach(container => {
-                        new Swiper(container, {
-                            loop: true,
-                            autoplay: { delay: 3000 },
-                            pagination: { el: '.swiper-pagination', clickable: true }
-                        });
-                    });
-                    gsap.to('.car-card', { opacity: 1, y: 0, stagger: 0.1, duration: 0.5 });
                 }
 
                 function displayPagination(cars) {
                     const totalPages = Math.ceil(cars.length / carsPerPage);
                     let html = '';
                     for (let i = 1; i <= totalPages; i++) {
-                        html += `
-                            <button class="pagination-btn px-4 py-2 rounded-lg ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}"
-                                    onclick="filterCars(${i})">${i}</button>
-                        `;
+                        html += `<button class="px-3 py-1 rounded-lg ${i === currentPage ? 'bg-blue-600' : 'bg-gray-600'} hover:bg-blue-700 transition duration-300" onclick="filterCars(${i})">${i}</button>`;
                     }
                     document.getElementById('pagination').innerHTML = html;
                 }
 
                 function resetFilters() {
-                    $('#brand').val('').trigger('change');
-                    $('#type').val('').trigger('change');
-                    $('#year').val('').trigger('change');
-                    priceSlider.noUiSlider.set(10000000);
-                    priceValue.textContent = '10,000,000 ₽';
+                    document.getElementById('brand').value = '';
+                    document.getElementById('type').value = '';
+                    document.getElementById('year').value = '';
+                    leftPos = 0;
+                    rightPos = 100;
+                    updateRange();
                     filterCars(1);
                 }
 
-                function showModal(carId) {
-                    const car = cars.find(c => c.id === carId);
+                function showModal(car) {
                     document.getElementById('modal-title').textContent = `${car.brand} ${car.model}`;
-                    document.getElementById('modal-photos').innerHTML = car.photos.map(photo => `<div class="swiper-slide"><img src="${photo}" alt="${car.brand} ${car.model}"></div>`).join('');
-                    document.getElementById('modal-details').textContent = car.details;
-                    document.getElementById('modal-specs').innerHTML = car.details.split(', ').map(spec => `<li>${spec}</li>`).join('');
+                    document.getElementById('modal-details').textContent = car.details || 'Нет деталей';
+                    document.getElementById('modal-specs').innerHTML = (car.details || '').split(', ').map(spec => `<li>${spec}</li>`).join('');
                     document.getElementById('modal').classList.remove('hidden');
-                    new Swiper('#modal .swiper-container', {
-                        loop: true,
-                        autoplay: { delay: 3000 },
-                        pagination: { el: '.swiper-pagination', clickable: true }
-                    });
-                    gsap.from('#modal .modal-content', { opacity: 0, scale: 0.8, duration: 0.3 });
                 }
 
                 function closeModal() {
@@ -448,8 +317,31 @@ def webapp():
                 }
 
                 // Инициализация
-                filterCars(1);
+                loadCars();
+                updateRange();
             </script>
+            <style>
+                @keyframes fade-in {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes fade-in-scale {
+                    from { opacity: 0; transform: scale(0.9); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                @keyframes slide-up {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes fade-in-up {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in { animation: fade-in 0.5s ease-out; }
+                .animate-fade-in-scale { animation: fade-in-scale 0.5s ease-out; }
+                .animate-slide-up { animation: slide-up 0.5s ease-out; }
+                .animate-fade-in-up { animation: fade-in-up 0.5s ease-out; }
+            </style>
         </div>
     </body>
     </html>
@@ -460,7 +352,7 @@ def webapp():
 @app.route("/filter")
 def filter_cars():
     logger.info("Accessed filter route")
-    return json.dumps(cars)
+    return json.dumps([])
 
 # Telegram: Webhook
 @app.route("/webhook", methods=["POST"])
@@ -502,30 +394,47 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     price_range = args[2].split("-") if len(args) > 2 else [0, float("inf")]
     car_type = args[3] if len(args) > 3 else ""
     
-    filtered = [
-        car for car in cars
-        if (not brand or brand.lower() in car["brand"].lower()) and
-           int(year_range[0]) <= car["year"] <= int(year_range[1]) and
-           float(price_range[0]) <= car["price"] <= float(price_range[1]) and
-           (not car_type or car_type.lower() in car["type"].lower())
-    ]
-    
-    if not filtered:
-        await update.message.reply_text("Автомобили не найдены.")
-        return
-    
-    for car in filtered[:5]:
-        await update.message.reply_photo(
-            photo=car["photos"][0],
-            caption=f"{car['brand']} {car['model']} ({car['year']}) - {car['price']:,} ₽ - {car['type']}\n{car['details']}"
-        )
+    headers = {
+        'Authorization': f'Bearer {API_TOKEN}',
+        'X-API-KEY': API_SECRET
+    }
+    params = {
+        'brand': brand,
+        'year_min': year_range[0],
+        'year_max': year_range[1],
+        'price_min': price_range[0],
+        'price_max': price_range[1],
+        'type': car_type
+    }
+    try:
+        response = requests.get('https://api.carapi.com/cars', headers=headers, params=params)
+        cars = response.json().get('results', [])
+        if not cars:
+            await update.message.reply_text("Автомобили не найдены.")
+            return
+        for car in cars[:5]:
+            await update.message.reply_photo(
+                photo=car.get('image', ''),
+                caption=f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}\n{car.get('details', '')}"
+            )
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка поиска: {e}")
 
 # Telegram: /list
 async def list_cars(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Processing /list command")
-    message = "Доступные автомобили:\n" + "\n".join([f"{car['brand']} {car['model']} ({car['year']}) - {car['price']:,} ₽ - {car['type']}" for car in cars[:5]])
-    keyboard = [[InlineKeyboardButton("Далее", callback_data="next_0")]] if len(cars) > 5 else []
-    await update.message.reply_text(message, reply_markup=InlineKeyboardMarkup(keyboard))
+    headers = {
+        'Authorization': f'Bearer {API_TOKEN}',
+        'X-API-KEY': API_SECRET
+    }
+    try:
+        response = requests.get('https://api.carapi.com/cars', headers=headers)
+        cars = response.json().get('results', [])[:5]
+        message = "Доступные автомобили:\n" + "\n".join([f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}" for car in cars])
+        keyboard = [[InlineKeyboardButton("Далее", callback_data="next_0")]] if len(cars) > 5 else []
+        await update.message.reply_text(message or "Автомобили не найдены.", reply_markup=InlineKeyboardMarkup(keyboard))
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка загрузки: {e}")
 
 # Telegram: /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -534,7 +443,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Команды:\n"
         "/start - Начать\n"
         "/search - Поиск (пример: /search Toyota 2020-2023 2000000-3000000 Sedan)\n"
-        "/list - Список автомобилей\n"
+        "/list - Список всех автомобилей\n"
         "/game - Угадай автомобиль\n"
         "/help - Справка"
     )
@@ -542,15 +451,27 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Telegram: /game
 async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Processing /game command")
-    car = random.choice(cars)
-    options = random.sample(cars, 3) + [car]
-    random.shuffle(options)
-    keyboard = [[InlineKeyboardButton(f"{c['brand']} {c['model']}", callback_data="correct" if c == car else "wrong")] for c in options]
-    await update.message.reply_photo(
-        photo=car["photos"][0],
-        caption="Угадай автомобиль!",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    headers = {
+        'Authorization': f'Bearer {API_TOKEN}',
+        'X-API-KEY': API_SECRET
+    }
+    try:
+        response = requests.get('https://api.carapi.com/cars', headers=headers)
+        cars = response.json().get('results', [])
+        if not cars:
+            await update.message.reply_text("Автомобили не найдены.")
+            return
+        car = random.choice(cars)
+        options = random.sample(cars, min(3, len(cars)-1)) + [car]
+        random.shuffle(options)
+        keyboard = [[InlineKeyboardButton(f"{c.get('brand', '')} {c.get('model', '')}", callback_data="correct" if c == car else "wrong")] for c in options]
+        await update.message.reply_photo(
+            photo=car.get('image', ''),
+            caption="Угадай автомобиль!",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    except Exception as e:
+        await update.message.reply_text(f"Ошибка игры: {e}")
 
 # Telegram: Обработка кнопок
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -568,19 +489,37 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.message.reply_text("Выбери бренд:", reply_markup=InlineKeyboardMarkup(keyboard))
     elif query.data.startswith("search_"):
         brand = query.data.split("_")[1]
-        filtered = [car for car in cars if brand.lower() in car["brand"].lower()]
-        for car in filtered[:5]:
-            await query.message.reply_photo(
-                photo=car["photos"][0],
-                caption=f"{car['brand']} {car['model']} ({car['year']}) - {car['price']:,} ₽ - {car['type']}\n{car['details']}"
-            )
+        headers = {
+            'Authorization': f'Bearer {API_TOKEN}',
+            'X-API-KEY': API_SECRET
+        }
+        params = {'brand': brand}
+        try:
+            response = requests.get('https://api.carapi.com/cars', headers=headers, params=params)
+            cars = response.json().get('results', [])
+            for car in cars[:5]:
+                await query.message.reply_photo(
+                    photo=car.get('image', ''),
+                    caption=f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}\n{car.get('details', '')}"
+                )
+        except Exception as e:
+            await query.message.reply_text(f"Ошибка поиска: {e}")
     elif query.data.startswith("next_"):
         page = int(query.data.split("_")[1]) + 1
-        start = page * 5
-        filtered = cars[start:start+5]
-        message = "\n".join([f"{car['brand']} {car['model']} ({car['year']}) - {car['price']:,} ₽ - {car['type']}" for car in filtered])
-        keyboard = [[InlineKeyboardButton("Далее", callback_data=f"next_{page}")]] if start + 5 < len(cars) else []
-        await query.message.reply_text(message or "Больше нет автомобилей.", reply_markup=InlineKeyboardMarkup(keyboard))
+        headers = {
+            'Authorization': f'Bearer {API_TOKEN}',
+            'X-API-KEY': API_SECRET
+        }
+        try:
+            response = requests.get('https://api.carapi.com/cars', headers=headers)
+            cars = response.json().get('results', [])
+            start = page * 5
+            filtered = cars[start:start+5]
+            message = "\n".join([f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}" for car in filtered])
+            keyboard = [[InlineKeyboardButton("Далее", callback_data=f"next_{page}")]] if start + 5 < len(cars) else []
+            await query.message.reply_text(message or "Больше нет автомобилей.", reply_markup=InlineKeyboardMarkup(keyboard))
+        except Exception as e:
+            await query.message.reply_text(f"Ошибка загрузки: {e}")
     elif query.data == "correct":
         await query.message.reply_text("Правильно! 🚗")
     elif query.data == "wrong":
