@@ -69,7 +69,7 @@ def favicon():
 @app.route("/webapp")
 def webapp():
     logger.info("Accessed webapp route")
-    html = """
+    html = f"""
     <!DOCTYPE html>
     <html lang="ru">
     <head>
@@ -145,22 +145,22 @@ def webapp():
                 // Telegram Web App настройки
                 window.Telegram.WebApp.ready();
                 window.Telegram.WebApp.expand();
-                window.Telegram.WebApp.setHeaderColor({ color_key: 'bg_color' });
-                window.Telegram.WebApp.setBottomBarColor({ color: '#ffffff' });
 
                 let cars = [];
                 let currentPage = 1;
                 const carsPerPage = 9;
                 const minPrice = 0;
                 const maxPrice = 10000000;
+                const apiToken = "{API_TOKEN}";
+                const apiSecret = "{API_SECRET}";
 
                 // Загрузка данных из carapi
                 async function loadCars() {
                     try {
                         const response = await fetch('https://api.carapi.com/cars', {
                             headers: {
-                                'Authorization': `Bearer ${API_TOKEN}`,
-                                'X-API-KEY': API_SECRET
+                                'Authorization': `Bearer ${apiToken}`,
+                                'X-API-KEY': apiSecret
                             }
                         });
                         const data = await response.json();
@@ -322,30 +322,30 @@ def webapp():
             </script>
             <style>
                 @keyframes fade-in {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
+                    from {{ opacity: 0; }}
+                    to {{ opacity: 1; }}
                 }
                 @keyframes fade-in-scale {
-                    from { opacity: 0; transform: scale(0.9); }
-                    to { opacity: 1; transform: scale(1); }
+                    from {{ opacity: 0; transform: scale(0.9); }}
+                    to {{ opacity: 1; transform: scale(1); }}
                 }
                 @keyframes slide-up {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
+                    from {{ opacity: 0; transform: translateY(20px); }}
+                    to {{ opacity: 1; transform: translateY(0); }}
                 }
                 @keyframes fade-in-up {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
+                    from {{ opacity: 0; transform: translateY(10px); }}
+                    to {{ opacity: 1; transform: translateY(0); }}
                 }
-                .animate-fade-in { animation: fade-in 0.5s ease-out; }
-                .animate-fade-in-scale { animation: fade-in-scale 0.5s ease-out; }
-                .animate-slide-up { animation: slide-up 0.5s ease-out; }
-                .animate-fade-in-up { animation: fade-in-up 0.5s ease-out; }
+                .animate-fade-in {{ animation: fade-in 0.5s ease-out; }}
+                .animate-fade-in-scale {{ animation: fade-in-scale 0.5s ease-out; }}
+                .animate-slide-up {{ animation: slide-up 0.5s ease-out; }}
+                .animate-fade-in-up {{ animation: fade-in-up 0.5s ease-out; }}
             </style>
         </div>
     </body>
     </html>
-    """
+    """.replace("{API_TOKEN}", API_TOKEN).replace("{API_SECRET}", API_SECRET)
     return render_template_string(html)
 
 # Flask: Фильтрация
