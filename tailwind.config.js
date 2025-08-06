@@ -1,5 +1,7 @@
 module.exports = {
-  content: ["app.py", "./**/*.{html,js}"],
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
   theme: {
     extend: {},
   },

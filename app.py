@@ -4,8 +4,7 @@ import requests
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from flask import Flask, request, render_template_string
-import random
+from flask import Flask, request, render_template
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -65,294 +64,31 @@ def set_webhook_manual():
 def favicon():
     return "", 204
 
+# Flask: API для данных
+@app.route("/api/cars")
+def api_cars():
+    logger.info("Accessed api/cars route")
+    headers = {
+        'Authorization': f'Bearer {API_TOKEN}',
+        'X-API-KEY': API_SECRET
+    }
+    try:
+        response = requests.get('https://api.carapi.com/cars', headers=headers)
+        return response.json()
+    except Exception as e:
+        logger.error(f"API error: {e}")
+        return {"error": str(e)}, 500
+
 # Flask: Mini App
 @app.route("/webapp")
 def webapp():
     logger.info("Accessed webapp route")
-    html = f"""
-    <!DOCTYPE html>
-    <html lang="ru">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Car Finder</title>
-        <script src="https://telegram.org/js/telegram-web-app.js"></script>
-        <link rel="stylesheet" href="/static/output.css">
-    </head>
-    <body class="bg-gradient-to-br from-blue-900 to-blue-500 text-white font-sans">
-        <div class="container mx-auto p-4 max-w-5xl">
-            <h1 class="text-4xl font-extrabold text-center mb-8 animate-fade-in">Car Finder 🚗</h1>
-            
-            <!-- Фильтры -->
-            <div class="bg-white/10 backdrop-blur-md p-6 rounded-xl mb-8 animate-slide-up">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Бренд</label>
-                        <select id="brand" class="w-full p-2 border border-gray-600 rounded-lg bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Все бренды</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Тип</label>
-                        <select id="type" class="w-full p-2 border border-gray-600 rounded-lg bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Все типы</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Год</label>
-                        <select id="year" class="w-full p-2 border border-gray-600 rounded-lg bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <option value="">Все годы</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-6">
-                    <label class="block text-sm font-medium text-gray-300 mb-2">Цена (₽)</label>
-                    <div class="w-full h-2 bg-gray-600 rounded-full relative">
-                        <div id="price-range" class="h-2 bg-blue-500 rounded-full absolute"></div>
-                        <div id="price-thumb-left" class="w-4 h-4 bg-blue-500 rounded-full absolute -top-1 cursor-pointer transform -translate-x-1/2"></div>
-                        <div id="price-thumb-right" class="w-4 h-4 bg-blue-500 rounded-full absolute -top-1 cursor-pointer transform -translate-x-1/2"></div>
-                    </div>
-                    <div class="flex justify-between text-sm text-gray-400 mt-2">
-                        <span id="min-price">0</span>
-                        <span id="max-price">10,000,000</span>
-                    </div>
-                </div>
-                <div class="mt-6 flex space-x-4">
-                    <button onclick="filterCars(1)" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out transform hover:scale-105">Фильтровать</button>
-                    <button onclick="resetFilters()" class="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition duration-300 ease-in-out transform hover:scale-105">Сбросить</button>
-                </div>
-            </div>
+    return render_template("index.html")
 
-            <!-- Результаты -->
-            <div id="results" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-
-            <!-- Пагинация -->
-            <div id="pagination" class="flex justify-center space-x-2 mt-8"></div>
-
-            <!-- Модальное окно для деталей -->
-            <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
-                <div class="bg-white p-6 rounded-xl max-w-lg w-full relative animate-fade-in-scale">
-                    <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
-                    <h2 id="modal-title" class="text-2xl font-bold mb-4 text-gray-800"></h2>
-                    <p id="modal-details" class="text-gray-700 whitespace-pre-line mb-4"></p>
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Характеристики:</h3>
-                    <ul id="modal-specs" class="list-disc pl-5 text-gray-600"></ul>
-                    <button onclick="closeModal()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300">Закрыть</button>
-                </div>
-            </div>
-
-            <script>
-                // Telegram Web App настройки
-                window.Telegram.WebApp.ready();
-                window.Telegram.WebApp.expand();
-
-                let cars = [];
-                let currentPage = 1;
-                const carsPerPage = 9;
-                const minPrice = 0;
-                const maxPrice = 10000000;
-                const apiToken = "{API_TOKEN}";
-                const apiSecret = "{API_SECRET}";
-
-                // Загрузка данных из carapi
-                async function loadCars() {
-                    try {
-                        const response = await fetch('https://api.carapi.com/cars', {
-                            headers: {
-                                'Authorization': `Bearer ${apiToken}`,
-                                'X-API-KEY': apiSecret
-                            }
-                        });
-                        const data = await response.json();
-                        cars = data.results || [];
-                        populateFilters();
-                        filterCars(1);
-                    } catch (error) {
-                        console.error('Ошибка загрузки данных:', error);
-                    }
-                }
-
-                // Динамическое заполнение фильтров
-                function populateFilters() {
-                    const brands = [...new Set(cars.map(car => car.brand))].sort();
-                    const types = [...new Set(cars.map(car => car.type))].sort();
-                    const years = [...new Set(cars.map(car => car.year))].sort((a, b) => b - a);
-
-                    const brandSelect = document.getElementById('brand');
-                    const typeSelect = document.getElementById('type');
-                    const yearSelect = document.getElementById('year');
-
-                    brands.forEach(brand => {
-                        const option = document.createElement('option');
-                        option.value = brand;
-                        option.textContent = brand;
-                        brandSelect.appendChild(option);
-                    });
-
-                    types.forEach(type => {
-                        const option = document.createElement('option');
-                        option.value = type;
-                        option.textContent = type;
-                        typeSelect.appendChild(option);
-                    });
-
-                    years.forEach(year => {
-                        const option = document.createElement('option');
-                        option.value = year;
-                        option.textContent = year;
-                        yearSelect.appendChild(option);
-                    });
-                }
-
-                // Слайдер цены
-                const slider = document.querySelector('.price-slider');
-                const range = document.getElementById('price-range');
-                const thumbLeft = document.getElementById('price-thumb-left');
-                const thumbRight = document.getElementById('price-thumb-right');
-                const minPriceDisplay = document.getElementById('min-price');
-                const maxPriceDisplay = document.getElementById('max-price');
-
-                let isDraggingLeft = false;
-                let isDraggingRight = false;
-                let leftPos = 0;
-                let rightPos = 100;
-
-                function updateRange() {
-                    range.style.left = `${leftPos}%`;
-                    range.style.width = `${rightPos - leftPos}%`;
-                    thumbLeft.style.left = `${leftPos}%`;
-                    thumbRight.style.left = `${rightPos}%`;
-                    minPriceDisplay.textContent = Math.round((leftPos / 100) * maxPrice).toLocaleString('ru-RU');
-                    maxPriceDisplay.textContent = Math.round((rightPos / 100) * maxPrice).toLocaleString('ru-RU');
-                }
-
-                thumbLeft.addEventListener('mousedown', () => isDraggingLeft = true);
-                thumbRight.addEventListener('mousedown', () => isDraggingRight = true);
-
-                document.addEventListener('mousemove', (e) => {
-                    if (!isDraggingLeft && !isDraggingRight) return;
-                    const rect = slider.getBoundingClientRect();
-                    const position = Math.min(Math.max(0, (e.clientX - rect.left) / rect.width * 100), 100);
-                    if (isDraggingLeft) {
-                        leftPos = Math.min(position, rightPos - 1);
-                        if (leftPos < 0) leftPos = 0;
-                    } else if (isDraggingRight) {
-                        rightPos = Math.max(position, leftPos + 1);
-                        if (rightPos > 100) rightPos = 100;
-                    }
-                    updateRange();
-                });
-
-                document.addEventListener('mouseup', () => {
-                    isDraggingLeft = false;
-                    isDraggingRight = false;
-                });
-
-                // Фильтрация
-                function filterCars(page = 1) {
-                    const brand = document.getElementById('brand').value;
-                    const type = document.getElementById('type').value;
-                    const year = document.getElementById('year').value;
-                    const minPriceValue = (leftPos / 100) * maxPrice;
-                    const maxPriceValue = (rightPos / 100) * maxPrice;
-
-                    const filtered = cars.filter(car => {
-                        const matchesBrand = !brand || car.brand.toLowerCase().includes(brand.toLowerCase());
-                        const matchesType = !type || car.type.toLowerCase().includes(type.toLowerCase());
-                        const matchesYear = !year || car.year == year;
-                        const matchesPrice = car.price >= minPriceValue && car.price <= maxPriceValue;
-                        return matchesBrand && matchesType && matchesYear && matchesPrice;
-                    });
-
-                    currentPage = page;
-                    displayCars(filtered, page);
-                    displayPagination(filtered);
-                }
-
-                function displayCars(cars, page) {
-                    const start = (page - 1) * carsPerPage;
-                    const end = start + carsPerPage;
-                    const paginatedCars = cars.slice(start, end);
-                    let html = '';
-                    paginatedCars.forEach(car => {
-                        html += `
-                            <div class="bg-white/10 backdrop-blur-md p-4 rounded-xl text-center transition-transform duration-300 hover:scale-105 animate-fade-in-up">
-                                <h3 class="text-xl font-semibold">${car.brand} ${car.model}</h3>
-                                <p class="text-gray-300">${car.year} | ${car.type} | ${car.price.toLocaleString('ru-RU')} ₽</p>
-                                <button onclick="showModal(${JSON.stringify(car)})" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300">Подробнее</button>
-                            </div>
-                        `;
-                    });
-                    document.getElementById('results').innerHTML = html;
-                }
-
-                function displayPagination(cars) {
-                    const totalPages = Math.ceil(cars.length / carsPerPage);
-                    let html = '';
-                    for (let i = 1; i <= totalPages; i++) {
-                        html += `<button class="px-3 py-1 rounded-lg ${i === currentPage ? 'bg-blue-600' : 'bg-gray-600'} hover:bg-blue-700 transition duration-300" onclick="filterCars(${i})">${i}</button>`;
-                    }
-                    document.getElementById('pagination').innerHTML = html;
-                }
-
-                function resetFilters() {
-                    document.getElementById('brand').value = '';
-                    document.getElementById('type').value = '';
-                    document.getElementById('year').value = '';
-                    leftPos = 0;
-                    rightPos = 100;
-                    updateRange();
-                    filterCars(1);
-                }
-
-                function showModal(car) {
-                    document.getElementById('modal-title').textContent = `${car.brand} ${car.model}`;
-                    document.getElementById('modal-details').textContent = car.details || 'Нет деталей';
-                    document.getElementById('modal-specs').innerHTML = (car.details || '').split(', ').map(spec => `<li>${spec}</li>`).join('');
-                    document.getElementById('modal').classList.remove('hidden');
-                }
-
-                function closeModal() {
-                    document.getElementById('modal').classList.add('hidden');
-                }
-
-                // Инициализация
-                loadCars();
-                updateRange();
-            </script>
-            <style>
-              @keyframes fade-in {
-                  from {{ opacity: 0; }}
-                  to {{ opacity: 1; }}
-              }
-              @keyframes fade-in-scale {
-                  from {{ opacity: 0; transform: scale(0.9); }}
-                  to {{ opacity: 1; transform: scale(1); }}
-              }
-              @keyframes slide-up {
-                  from {{ opacity: 0; transform: translateY(20px); }}
-                  to {{ opacity: 1; transform: translateY(0); }}
-              }
-              @keyframes fade-in-up {
-                  from {{ opacity: 0; transform: translateY(10px); }}
-                  to {{ opacity: 1; transform: translateY(0); }}
-              }
-              .animate-fade-in {{ animation: fade-in 0.5s ease-out; }}
-              .animate-fade-in-scale {{ animation: fade-in-scale 0.5s ease-out; }}
-              .animate-slide-up {{ animation: slide-up 0.5s ease-out; }}
-              .animate-fade-in-up {{ animation: fade-in-up 0.5s ease-out; }}
-          </style>
-        </div>
-    </body>
-    </html>
-    """.replace("{API_TOKEN}", API_TOKEN).replace("{API_SECRET}", API_SECRET)
-    return render_template_string(html)
-
-# Flask: Фильтрация
-@app.route("/filter")
-def filter_cars():
-    logger.info("Accessed filter route")
-    return json.dumps([])
+# Flask: Статические файлы
+@app.route('/<path:path>')
+def static_proxy(path):
+    return app.send_static_file(path)
 
 # Telegram: Webhook
 @app.route("/webhook", methods=["POST"])
@@ -536,7 +272,7 @@ async def set_webhook():
 
 # Инициализация
 def main():
-    logger.info("Starting bot initialization 06.08.2025")
+    logger.info("Starting bot initialization")
     if not application:
         logger.error("Application not initialized, skipping handlers")
         return
