@@ -5,6 +5,7 @@ import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from flask import Flask, request
+import random
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -46,10 +47,11 @@ def get_jwt():
         response = requests.post(url, headers=headers, json=payload, timeout=10)
         logger.info(f"JWT request status: {response.status_code}, content: {response.text[:500]}... (truncated)")
         if response.status_code == 200:
-            JWT_TOKEN = response.text
+            JWT_TOKEN = response.text.strip()
+            logger.info(f"Successfully obtained JWT: {JWT_TOKEN[:50]}... (truncated)")
             return JWT_TOKEN
         else:
-            logger.error(f"Failed to get JWT: {response.status_code}")
+            logger.error(f"Failed to get JWT: {response.status_code}, {response.text}")
             return None
     except Exception as e:
         logger.error(f"JWT request error: {str(e)}")
@@ -109,6 +111,13 @@ def api_cars():
     try:
         response = requests.get("https://carapi.app/api/models/v2", headers=headers, timeout=10)
         logger.info(f"API response status: {response.status_code}, content: {response.text[:500]}... (truncated)")
+        if response.status_code == 401:
+            logger.info("JWT expired or invalid, refreshing...")
+            JWT_TOKEN = get_jwt()
+            if not JWT_TOKEN:
+                return {"error": "Failed to refresh JWT"}, 500
+            headers["Authorization"] = f"Bearer {JWT_TOKEN}"
+            response = requests.get("https://carapi.app/api/models/v2", headers=headers, timeout=10)
         if response.status_code != 200:
             raise Exception(f"API returned status {response.status_code}")
         return response.json()
@@ -120,7 +129,7 @@ def api_cars():
 @app.route("/webapp")
 def webapp():
     logger.info("Redirecting to React app")
-    return "Please use the Telegram Mini App via /webapp URL.", 200
+    return app.send_static_file("index.html")
 
 # Flask: Статические файлы
 @app.route('/<path:path>')
@@ -163,7 +172,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Используй: /search бренд год_от-год_до цена_от-цена_до тип (например, /search Toyota 2020-2023 2000000-3000000 Sedan)")
         return
     brand = args[0] if args else ""
-    year_range = args[1].split("-") if len(args) > 1 else [2015, 2020]  # Ограничение бесплатного плана
+    year_range = args[1].split("-") if len(args) > 1 else [2015, 2020]
     price_range = args[2].split("-") if len(args) > 2 else [0, float("inf")]
     car_type = args[3] if len(args) > 3 else ""
     

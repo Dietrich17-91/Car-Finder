@@ -19,7 +19,7 @@
     },
     {
       "src": "/webapp",
-      "dest": "/index.html"
+      "dest": "build/index.html"
     },
     {
       "src": "/api/(.*)",
