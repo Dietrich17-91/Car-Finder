@@ -4,7 +4,7 @@ import requests
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from flask import Flask, request, render_template
+from flask import Flask, request
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -51,7 +51,7 @@ def set_webhook_manual():
         logger.error("Application not initialized")
         return {"status": "error", "message": "Application not initialized"}, 500
     try:
-        webhook_url = "https://cars-dun-phi.vercel.app/webhook"
+        webhook_url = "https://cars-c8iv85h7i-alexeys-projects-c244334f.vercel.app/webhook"
         application.bot.set_webhook(webhook_url)
         logger.info(f"Webhook set to: {webhook_url}")
         return {"status": "ok", "message": f"Webhook set to {webhook_url}"}
@@ -79,11 +79,11 @@ def api_cars():
         logger.error(f"API error: {e}")
         return {"error": str(e)}, 500
 
-# Flask: Mini App
+# Flask: Mini App теперь перенаправляет на React
 @app.route("/webapp")
 def webapp():
-    logger.info("Accessed webapp route")
-    return render_template("index.html")
+    logger.info("Redirecting to React app")
+    return "Please use the Telegram Mini App via /webapp URL.", 200
 
 # Flask: Статические файлы
 @app.route('/<path:path>')
@@ -113,7 +113,7 @@ async def webhook():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Processing /start command")
     keyboard = [
-        [InlineKeyboardButton("Открыть Car Finder", web_app={"url": "https://cars-dun-phi.vercel.app/webapp"})],
+        [InlineKeyboardButton("Открыть Car Finder", web_app={"url": "https://cars-c8iv85h7i-alexeys-projects-c244334f.vercel.app/webapp"})],
         [InlineKeyboardButton("Популярные бренды", callback_data="brands")]
     ]
     await update.message.reply_text("Добро пожаловать в Car Finder! Открой Mini App или выбери бренд.", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -263,7 +263,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Настройка webhook
 async def set_webhook():
-    webhook_url = "https://cars-dun-phi.vercel.app/webhook"
+    webhook_url = "https://cars-c8iv85h7i-alexeys-projects-c244334f.vercel.app/webhook"
     logger.info(f"Setting webhook: {webhook_url}")
     if not application:
         logger.error("Application not initialized")
