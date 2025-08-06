@@ -4,9 +4,8 @@ import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 from flask import Flask, request, render_template_string
-from threading import Thread
 
-# Flask app для Mini App
+# Flask app для Mini App и webhook
 app = Flask(__name__)
 
 # Тестовые данные
@@ -23,6 +22,7 @@ with open("cars.json", "w") as f:
 # Telegram bot token
 TOKEN = os.getenv("TOKEN", "YOUR_BOT_TOKEN_HERE")
 CAR_API_KEY = os.getenv("CAR_API_KEY", "YOUR_CARAPI_KEY")
+application = Application.builder().token(TOKEN).build()
 
 # Flask: Mini App
 @app.route("/webapp")
@@ -33,28 +33,25 @@ def webapp():
     <head>
         <title>Car Finder</title>
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <style>
-            body { font-family: Arial; margin: 20px; background: #f0f0f0; }
             .car { margin: 10px; padding: 10px; border: 1px solid #ccc; background: white; border-radius: 5px; }
             img { max-width: 100px; border-radius: 5px; }
-            select, input, button { margin: 5px; padding: 8px; }
-            button { background: #0088cc; color: white; border: none; border-radius: 5px; cursor: pointer; }
-            #results { margin-top: 20px; }
         </style>
     </head>
-    <body>
-        <h1>Car Finder</h1>
-        <select id="brand">
+    <body class="bg-gray-100 font-sans p-5">
+        <h1 class="text-2xl font-bold mb-4">Car Finder</h1>
+        <select id="brand" class="p-2 m-2 border rounded">
             <option value="">Все бренды</option>
             <option value="Toyota">Toyota</option>
             <option value="Honda">Honda</option>
             <option value="Ford">Ford</option>
         </select>
-        <input id="maxPrice" placeholder="Макс. цена (e.g., 30000)">
-        <input id="year" placeholder="Год (e.g., 2020)">
-        <button onclick="filterCars()">Фильтровать</button>
-        <button onclick="buyPremium()">Купить премиум за Telegram Stars</button>
-        <div id="results"></div>
+        <input id="maxPrice" placeholder="Макс. цена (e.g., 30000)" class="p-2 m-2 border rounded">
+        <input id="year" placeholder="Год (e.g., 2020)" class="p-2 m-2 border rounded">
+        <button onclick="filterCars()" class="bg-blue-500 text-white p-2 m-2 rounded hover:bg-blue-600">Фильтровать</button>
+        <button onclick="buyPremium()" class="bg-green-500 text-white p-2 m-2 rounded hover:bg-green-600">Купить премиум</button>
+        <div id="results" class="mt-5"></div>
         <script>
             async function filterCars() {
                 const brand = document.getElementById("brand").value;
@@ -108,6 +105,13 @@ def fetch_cars_from_api(brand="", max_price=float("inf"), year=0):
         return []
     except:
         return []
+
+# Telegram: Webhook
+@app.route("/webhook", methods=["POST"])
+async def webhook():
+    update = Update.de_json(request.get_json(), application.bot)
+    await application.process_update(update)
+    return {"status": "ok"}
 
 # Telegram: /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -202,19 +206,22 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         keyboard = [[InlineKeyboardButton("Далее", callback_data=f"next_{page}")]] if start + 5 < len(cars) else []
         await query.message.reply_text(message or "Больше нет автомобилей.", reply_markup=InlineKeyboardMarkup(keyboard))
 
+# Настройка webhook
+async def set_webhook():
+    await application.bot.setWebhook(f"https://your-vercel-project.vercel.app/webhook")
+
+# Инициализация
 def main():
-    # Запуск Telegram бота
-    application = Application.builder().token(TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("search", search))
     application.add_handler(CommandHandler("list", list_cars))
     application.add_handler(CommandHandler("premium", premium))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CallbackQueryHandler(button))
-    
-    # Запуск Flask в Vercel
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+    import asyncio
+    asyncio.run(set_webhook())
 
-# Vercel serverless
-def handler(event, context):
-    return app(event, context)
+# Запуск Flask
+if __name__ == "__main__":
+    main()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
