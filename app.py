@@ -77,7 +77,7 @@ def webapp():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Car Finder</title>
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
-        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="/static/output.css">
     </head>
     <body class="bg-gradient-to-br from-blue-900 to-blue-500 text-white font-sans">
         <div class="container mx-auto p-4 max-w-5xl">
@@ -322,25 +322,25 @@ def webapp():
             </script>
             <style>
                 @keyframes fade-in {
-                    from {{ opacity: 0; }}
-                    to {{ opacity: 1; }}
+                    from { opacity: 0; }
+                    to { opacity: 1; }
                 }
                 @keyframes fade-in-scale {
-                    from {{ opacity: 0; transform: scale(0.9); }}
-                    to {{ opacity: 1; transform: scale(1); }}
+                    from { opacity: 0; transform: scale(0.9); }
+                    to { opacity: 1; transform: scale(1); }
                 }
                 @keyframes slide-up {
-                    from {{ opacity: 0; transform: translateY(20px); }}
-                    to {{ opacity: 1; transform: translateY(0); }}
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
                 @keyframes fade-in-up {
-                    from {{ opacity: 0; transform: translateY(10px); }}
-                    to {{ opacity: 1; transform: translateY(0); }}
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
-                .animate-fade-in {{ animation: fade-in 0.5s ease-out; }}
-                .animate-fade-in-scale {{ animation: fade-in-scale 0.5s ease-out; }}
-                .animate-slide-up {{ animation: slide-up 0.5s ease-out; }}
-                .animate-fade-in-up {{ animation: fade-in-up 0.5s ease-out; }}
+                .animate-fade-in { animation: fade-in 0.5s ease-out; }
+                .animate-fade-in-scale { animation: fade-in-scale 0.5s ease-out; }
+                .animate-slide-up { animation: slide-up 0.5s ease-out; }
+                .animate-fade-in-up { animation: fade-in-up 0.5s ease-out; }
             </style>
         </div>
     </body>
@@ -536,7 +536,7 @@ async def set_webhook():
 
 # Инициализация
 def main():
-    logger.info("Starting bot initialization")
+    logger.info("Starting bot initialization 06.08.2025")
     if not application:
         logger.error("Application not initialized, skipping handlers")
         return
