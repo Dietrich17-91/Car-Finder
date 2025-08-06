@@ -55,7 +55,7 @@ def set_webhook_manual():
         logger.error("Application not initialized")
         return {"status": "error", "message": "Application not initialized"}, 500
     try:
-        webhook_url = "https://cars-al3ugzy8t-alexeys-projects-c244334f.vercel.app/webhook"
+        webhook_url = "https://cars-dun-phi.vercel.app/webhook"
         application.bot.set_webhook(webhook_url)
         logger.info(f"Webhook set to: {webhook_url}")
         return {"status": "ok", "message": f"Webhook set to {webhook_url}"}
@@ -174,7 +174,7 @@ async def webhook():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Processing /start command")
     keyboard = [
-        [InlineKeyboardButton("Открыть Car Finder", web_app={"url": "https://cars-al3ugzy8t-alexeys-projects-c244334f.vercel.app/webapp"})],
+        [InlineKeyboardButton("Открыть Car Finder", web_app={"url": "https://cars-dun-phi.vercel.app/webapp"})],
         [InlineKeyboardButton("Популярные бренды", callback_data="brands")]
     ]
     await update.message.reply_text("Добро пожаловать в Car Finder! Открой Mini App или выбери бренд.", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -257,13 +257,13 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         page = int(query.data.split("_")[1]) + 1
         start = page * 5
         filtered = cars[start:start+5]
-        message = "\n".join([f"{car['brand']} {car['model']} ({car['year']}) - ${car['price']} - {car['type']}" for car in filtered])
+        message = "\n".join([f"{car['brand']} {car['model']} ({car['year']}) - ${car['price']} - ${car['type']}" for car in filtered])
         keyboard = [[InlineKeyboardButton("Далее", callback_data=f"next_{page}")]] if start + 5 < len(cars) else []
         await query.message.reply_text(message or "Больше нет автомобилей.", reply_markup=InlineKeyboardMarkup(keyboard))
 
 # Настройка webhook
 async def set_webhook():
-    webhook_url = "https://cars-al3ugzy8t-alexeys-projects-c244334f.vercel.app/webhook"
+    webhook_url = "https://cars-dun-phi.vercel.app/webhook"
     logger.info(f"Setting webhook: {webhook_url}")
     if not application:
         logger.error("Application not initialized")
