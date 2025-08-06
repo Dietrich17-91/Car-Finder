@@ -3,7 +3,7 @@ import os
 import requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, send_file
 
 # Flask app для Mini App и webhook
 app = Flask(__name__)
@@ -19,6 +19,16 @@ cars = [
 TOKEN = os.getenv("TOKEN", "YOUR_BOT_TOKEN_HERE")
 CAR_API_KEY = os.getenv("CAR_API_KEY", "YOUR_CARAPI_KEY")
 application = Application.builder().token(TOKEN).build()
+
+# Flask: Корневой маршрут
+@app.route("/")
+def index():
+    return "Car Finder Bot is running! Open the bot in Telegram or use /webapp for the Mini App."
+
+# Flask: Favicon
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204  # Пустой ответ для favicon
 
 # Flask: Mini App
 @app.route("/webapp")
@@ -110,7 +120,7 @@ async def webhook():
 # Telegram: /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [InlineKeyboardButton("Открыть Car Finder", web_app={"url": "https://your-vercel-project.vercel.app/webapp"})],
+        [InlineKeyboardButton("Открыть Car Finder", web_app={"url": "https://cars-al3ugzy8t-alexeys-projects-c244334f.vercel.app/webapp"})],
         [InlineKeyboardButton("Популярные бренды", callback_data="brands")]
     ]
     await update.message.reply_text("Добро пожаловать в Car Finder! Открой Mini App или выбери бренд.", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -141,7 +151,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for car in filtered[:5]:
         await update.message.reply_photo(
             photo=car["photo"],
-            caption=f"{car['brand']} {car['model']} (${car['year']}) - ${car['price']} - {car['type']}"
+            caption=f"{car['brand']} {car['model']} ({car['year']}) - ${car['price']} - {car['type']}"
         )
 
 # Telegram: /list
@@ -194,7 +204,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Настройка webhook
 async def set_webhook():
-    await application.bot.setWebhook(f"https://your-vercel-project.vercel.app/webhook")
+    await application.bot.setWebhook(f"https://cars-al3ugzy8t-alexeys-projects-c244334f.vercel.app/webhook")
 
 # Инициализация
 def main():
