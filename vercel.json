@@ -11,6 +11,10 @@
     {
       "src": "/(.*)",
       "dest": "app.py"
+    },
+    {
+      "src": "/static/tailwind.css",
+      "dest": "static/tailwind.css"
     }
   ]
 }
