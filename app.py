@@ -130,6 +130,7 @@ def webapp():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Car Finder</title>
         <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
@@ -139,31 +140,88 @@ def webapp():
         <link href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" rel="stylesheet">
         <style>
-            body { font-family: 'Arial', sans-serif; background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
-            .car-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
-            .car-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); }
-            .pagination-btn { transition: background-color 0.3s ease, transform 0.2s ease; }
-            .pagination-btn:hover { background-color: #1d4ed8; transform: scale(1.05); }
+            body { 
+                font-family: 'Arial', sans-serif; 
+                background: linear-gradient(135deg, #1e3a8a, #3b82f6); 
+                margin: 0; 
+                padding: 0; 
+            }
+            .container { 
+                max-width: 1280px; 
+                margin: 0 auto; 
+                padding: 20px; 
+            }
+            .car-card { 
+                transition: transform 0.3s ease, box-shadow 0.3s ease; 
+                border-radius: 12px; 
+                overflow: hidden; 
+            }
+            .car-card:hover { 
+                transform: translateY(-5px); 
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3); 
+            }
+            .pagination-btn { 
+                transition: background-color 0.3s ease, transform 0.2s ease; 
+                border-radius: 8px; 
+            }
+            .pagination-btn:hover { 
+                background-color: #1d4ed8; 
+                transform: scale(1.05); 
+            }
             .select2-container--default .select2-selection--single { 
-                border-radius: 8px; border: 1px solid #d1d5db; padding: 8px; height: 40px; 
+                border-radius: 8px; 
+                border: 1px solid #d1d5db; 
+                padding: 8px; 
+                height: 40px; 
+                background: #fff; 
             }
             .select2-container--default .select2-selection--single .select2-selection__rendered {
                 line-height: 24px;
+                color: #1f2937;
             }
             .select2-container--default .select2-selection--single .select2-selection__arrow { 
                 height: 38px; 
             }
-            .select2-dropdown { border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); }
-            .select2-results__option:hover { background-color: #e0f2fe; }
-            .noUi-handle { background: #3b82f6; border-radius: 50%; }
-            .noUi-connect { background: #3b82f6; }
-            .noUi-tooltip { background: #1e3a8a; color: #fff; border-radius: 4px; }
-            .swiper-container { height: 200px; }
-            .swiper-slide img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+            .select2-dropdown { 
+                border-radius: 8px; 
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); 
+                border: none; 
+            }
+            .select2-results__option:hover { 
+                background-color: #e0f2fe; 
+            }
+            .noUi-handle { 
+                background: #3b82f6; 
+                border-radius: 50%; 
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+            }
+            .noUi-connect { 
+                background: #3b82f6; 
+            }
+            .noUi-tooltip { 
+                background: #1e3a8a; 
+                color: #fff; 
+                border-radius: 4px; 
+                padding: 4px 8px; 
+            }
+            .swiper-container { 
+                height: 200px; 
+                border-radius: 8px; 
+                overflow: hidden; 
+            }
+            .swiper-slide img { 
+                width: 100%; 
+                height: 100%; 
+                object-fit: cover; 
+            }
+            .modal-content { 
+                max-height: 80vh; 
+                overflow-y: auto; 
+            }
         </style>
     </head>
-    <body class="min-h-screen p-5">
-        <div class="max-w-7xl mx-auto">
+    <body>
+        <div class="container">
             <h1 class="text-4xl font-extrabold text-center text-white mb-8">Car Finder 🚗</h1>
             
             <!-- Фильтры -->
@@ -238,7 +296,7 @@ def webapp():
 
             <!-- Модальное окно для деталей -->
             <div id="modal" class="fixed inset-0 bg-black bg-opacity-75 hidden flex items-center justify-center">
-                <div class="bg-white p-8 rounded-xl max-w-lg w-full relative">
+                <div class="bg-white p-8 rounded-xl max-w-lg w-full modal-content relative">
                     <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
                     <h2 id="modal-title" class="text-2xl font-bold mb-4"></h2>
                     <div class="swiper-container">
@@ -258,14 +316,26 @@ def webapp():
                 // Telegram Web App настройки
                 window.Telegram.WebApp.ready();
                 window.Telegram.WebApp.expand();
-                window.Telegram.WebApp.setHeaderColor('bg_color');
-                window.Telegram.WebApp.setBottomBarColor('#ffffff');
+                window.Telegram.WebApp.setHeaderColor({ color_key: 'bg_color' });
+                window.Telegram.WebApp.setBottomBarColor({ color: '#ffffff' });
 
                 // Инициализация Select2
                 $(document).ready(function() {
-                    $('#brand').select2({ placeholder: 'Выберите бренд', allowClear: true });
-                    $('#type').select2({ placeholder: 'Выберите тип', allowClear: true });
-                    $('#year').select2({ placeholder: 'Выберите год', allowClear: true });
+                    $('#brand').select2({ 
+                        placeholder: 'Выберите бренд', 
+                        allowClear: true,
+                        width: '100%'
+                    });
+                    $('#type').select2({ 
+                        placeholder: 'Выберите тип', 
+                        allowClear: true,
+                        width: '100%'
+                    });
+                    $('#year').select2({ 
+                        placeholder: 'Выберите год', 
+                        allowClear: true,
+                        width: '100%'
+                    });
                 });
 
                 // Инициализация noUISlider
@@ -276,15 +346,19 @@ def webapp():
                     connect: 'lower',
                     range: { 'min': 0, 'max': 10000000 },
                     step: 100000,
-                    format: { to: value => Math.round(value), from: value => value }
+                    format: { 
+                        to: value => Math.round(value), 
+                        from: value => Number(value) 
+                    },
+                    tooltips: true
                 });
-                priceSlider.noUiSlider.on('update', (values, handle) => {
+                priceSlider.noUiSlider.on('update', function(values, handle) {
                     priceValue.textContent = values[handle].toLocaleString('ru-RU') + ' ₽';
                 });
 
                 let currentPage = 1;
                 const carsPerPage = 9;
-                const cars = ${json.dumps(cars)};
+                const cars = JSON.parse('""" + json.dumps(cars).replace("'", "\\'") + """');
 
                 function filterCars(page = 1) {
                     const brand = document.getElementById('brand').value;
@@ -366,7 +440,7 @@ def webapp():
                         autoplay: { delay: 3000 },
                         pagination: { el: '.swiper-pagination', clickable: true }
                     });
-                    gsap.from('#modal > div', { opacity: 0, scale: 0.8, duration: 0.3 });
+                    gsap.from('#modal .modal-content', { opacity: 0, scale: 0.8, duration: 0.3 });
                 }
 
                 function closeModal() {
