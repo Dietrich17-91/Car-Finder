@@ -68,17 +68,19 @@ def favicon():
 @app.route("/api/cars")
 def api_cars():
     logger.info("Accessed api/cars route")
-    logger.info(f"API_TOKEN: {API_TOKEN}, API_SECRET: {API_SECRET}")
+    logger.info(f"API_TOKEN: {API_TOKEN[:5]}... (masked), API_SECRET: {API_SECRET[:5]}... (masked)")
     headers = {
         'Authorization': f'Bearer {API_TOKEN}',
         'X-API-KEY': API_SECRET
     }
     try:
-        response = requests.get('https://api.carapi.com/cars', headers=headers)
-        logger.info(f"API response status: {response.status_code}, content: {response.text}")
+        response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
+        logger.info(f"API response status: {response.status_code}, content: {response.text[:500]}... (truncated)")
+        if response.status_code != 200:
+            raise Exception(f"API returned status {response.status_code}")
         return response.json()
     except Exception as e:
-        logger.error(f"API error: {e}")
+        logger.error(f"API error: {str(e)}")
         return {"error": str(e)}, 500
 
 # Flask: Mini App теперь перенаправляет на React
@@ -145,7 +147,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'type': car_type
     }
     try:
-        response = requests.get('https://api.carapi.com/cars', headers=headers, params=params)
+        response = requests.get('https://api.carapi.com/cars', headers=headers, params=params, timeout=10)
         cars = response.json().get('results', [])
         if not cars:
             await update.message.reply_text("Автомобили не найдены.")
@@ -166,7 +168,7 @@ async def list_cars(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'X-API-KEY': API_SECRET
     }
     try:
-        response = requests.get('https://api.carapi.com/cars', headers=headers)
+        response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
         cars = response.json().get('results', [])[:5]
         message = "Доступные автомобили:\n" + "\n".join([f"{car.get('brand', '')} {car.get('model', '')} ({car.get('year', '')}) - {car.get('price', 0):,} ₽ - {car.get('type', '')}" for car in cars])
         keyboard = [[InlineKeyboardButton("Далее", callback_data="next_0")]] if len(cars) > 5 else []
@@ -194,7 +196,7 @@ async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'X-API-KEY': API_SECRET
     }
     try:
-        response = requests.get('https://api.carapi.com/cars', headers=headers)
+        response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
         cars = response.json().get('results', [])
         if not cars:
             await update.message.reply_text("Автомобили не найдены.")
@@ -233,7 +235,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
         params = {'brand': brand}
         try:
-            response = requests.get('https://api.carapi.com/cars', headers=headers, params=params)
+            response = requests.get('https://api.carapi.com/cars', headers=headers, params=params, timeout=10)
             cars = response.json().get('results', [])
             for car in cars[:5]:
                 await query.message.reply_photo(
@@ -249,7 +251,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'X-API-KEY': API_SECRET
         }
         try:
-            response = requests.get('https://api.carapi.com/cars', headers=headers)
+            response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
             cars = response.json().get('results', [])
             start = page * 5
             filtered = cars[start:start+5]
