@@ -68,6 +68,9 @@ def favicon():
 @app.route("/api/cars")
 def api_cars():
     logger.info("Accessed api/cars route")
+    if not API_TOKEN or not API_SECRET:
+        logger.error("API_TOKEN or API_SECRET is missing or empty")
+        return {"error": "API credentials not configured"}, 500
     logger.info(f"API_TOKEN: {API_TOKEN[:5]}... (masked), API_SECRET: {API_SECRET[:5]}... (masked)")
     headers = {
         'Authorization': f'Bearer {API_TOKEN}',
@@ -76,7 +79,17 @@ def api_cars():
     try:
         response = requests.get('https://api.carapi.com/cars', headers=headers, timeout=10)
         logger.info(f"API response status: {response.status_code}, content: {response.text[:500]}... (truncated)")
-        if response.status_code != 200:
+        if response.status_code == 410:
+            logger.error("API endpoint returned 410 Gone. Trying alternative endpoint...")
+            # Попытка альтернативного эндпоинта (если есть документация API)
+            alt_response = requests.get('https://api.carapi.com/v2/cars', headers=headers, timeout=10)
+            if alt_response.status_code == 200:
+                logger.info(f"Alternative endpoint worked: {alt_response.text[:500]}... (truncated)")
+                return alt_response.json()
+            else:
+                logger.error(f"Alternative endpoint failed with status: {alt_response.status_code}")
+                raise Exception(f"API returned status {alt_response.status_code}")
+        elif response.status_code != 200:
             raise Exception(f"API returned status {response.status_code}")
         return response.json()
     except Exception as e:

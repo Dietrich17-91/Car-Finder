@@ -15,11 +15,15 @@
   "routes": [
     {
       "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "dest": "build/static/$1"
     },
     {
       "src": "/webapp",
       "dest": "/index.html"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/app.py"
     },
     {
       "src": "/(.*)",
