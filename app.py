@@ -15,18 +15,18 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 
 # Переменные окружения
-TOKEN = os.getenv("TOKEN", "YOUR_BOT_TOKEN_HERE")
-if TOKEN == "YOUR_BOT_TOKEN_HERE":
+TOKEN = os.environ.get("TOKEN")  # Убираем дефолтное значение
+if not TOKEN:
     logger.error("TOKEN is not set in environment variables!")
-CARAPI_TOKEN = os.getenv("CARAPI_TOKEN", "YOUR_CARAPI_TOKEN")
-CARAPI_SECRET = os.getenv("CARAPI_SECRET", "YOUR_CARAPI_SECRET")
+CARAPI_TOKEN = os.environ.get("CARAPI_TOKEN")
+CARAPI_SECRET = os.environ.get("CARAPI_SECRET")
 JWT_TOKEN = None
 application = None
 
 # Инициализация бота (отложенная)
 def init_bot():
     global application
-    if not application and TOKEN != "YOUR_BOT_TOKEN_HERE":
+    if not application and TOKEN:
         try:
             application = Application.builder().token(TOKEN).http_timeout(10).build()
             logger.info(f"Telegram Application initialized with token: {TOKEN[:10]}... (truncated)")
@@ -95,8 +95,8 @@ def debug():
     logger.info("Accessed debug route")
     return {
         "status": "ok",
-        "token_set": TOKEN != "YOUR_BOT_TOKEN_HERE",
-        "token_value": TOKEN[:10] + "..." if TOKEN != "YOUR_BOT_TOKEN_HERE" else "Not set",
+        "token_set": bool(TOKEN),
+        "token_value": TOKEN[:10] + "..." if TOKEN else "Not set",
         "bot_initialized": init_bot(),
         "jwt_available": bool(JWT_TOKEN)
     }
@@ -107,7 +107,7 @@ def test():
     logger.info("Accessed test route")
     return {
         "status": "ok",
-        "token_set": TOKEN != "YOUR_BOT_TOKEN_HERE",
+        "token_set": bool(TOKEN),
         "webhook_active": init_bot()
     }
 
