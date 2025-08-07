@@ -14,12 +14,16 @@
   ],
   "routes": [
     {
+      "src": "/webhook",
+      "dest": "/app.py"
+    },
+    {
       "src": "/static/(.*)",
       "dest": "build/static/$1"
     },
     {
       "src": "/webapp",
-      "dest": "/index.html"
+      "dest": "build/index.html"
     },
     {
       "src": "/api/(.*)",

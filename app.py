@@ -14,35 +14,35 @@ logger = logging.getLogger(__name__)
 # Flask app
 app = Flask(__name__)
 
-# Telegram bot token
+# Переменные окружения
 TOKEN = os.getenv("TOKEN", "YOUR_BOT_TOKEN_HERE")
-try:
-    application = Application.builder().token(TOKEN).http_timeout(5).build()
-    logger.info("Telegram Application initialized successfully")
-except Exception as e:
-    logger.error(f"Failed to initialize Telegram Application: {e}")
-    application = None
-
-# API credentials
-API_TOKEN = os.getenv("CARAPI_TOKEN", "YOUR_CARAPI_TOKEN")
-API_SECRET = os.getenv("CARAPI_SECRET", "YOUR_CARAPI_SECRET")
+CARAPI_TOKEN = os.getenv("CARAPI_TOKEN", "YOUR_CARAPI_TOKEN")
+CARAPI_SECRET = os.getenv("CARAPI_SECRET", "YOUR_CARAPI_SECRET")
 JWT_TOKEN = None
+application = None
+
+# Инициализация бота (отложенная)
+def init_bot():
+    global application
+    if not application and TOKEN != "YOUR_BOT_TOKEN_HERE":
+        try:
+            application = Application.builder().token(TOKEN).http_timeout(5).build()
+            logger.info("Telegram Application initialized successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to initialize Telegram Application: {e}")
+            return False
+    return bool(application)
 
 # Функция для получения JWT
 def get_jwt():
     global JWT_TOKEN
-    if not API_TOKEN or not API_SECRET:
-        logger.error("API_TOKEN or API_SECRET is missing or empty")
+    if not CARAPI_TOKEN or not CARAPI_SECRET:
+        logger.error("CARAPI_TOKEN or CARAPI_SECRET is missing or empty")
         return None
     url = "https://carapi.app/api/auth/login"
-    headers = {
-        "accept": "text/plain",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "api_token": API_TOKEN,
-        "api_secret": API_SECRET
-    }
+    headers = {"accept": "text/plain", "Content-Type": "application/json"}
+    payload = {"api_token": CARAPI_TOKEN, "api_secret": CARAPI_SECRET}
     try:
         response = requests.post(url, headers=headers, json=payload, timeout=10)
         logger.info(f"JWT request status: {response.status_code}, content: {response.text[:500]}... (truncated)")
@@ -63,23 +63,39 @@ def index():
     logger.info("Accessed root route")
     return "Car Finder Bot is running! Open the bot in Telegram or use /webapp for the Mini App."
 
-# Flask: Тестовый маршрут для отладки
+# Flask: Webhook
+@app.route("/webhook", methods=["POST"])
+async def webhook():
+    logger.info("Received webhook update")
+    if not init_bot():
+        return {"status": "error", "message": "Application not initialized"}, 500
+    try:
+        update = Update.de_json(request.get_json(), application.bot)
+        if update:
+            await application.process_update(update)
+            logger.info("Update processed successfully")
+        else:
+            logger.warning("Invalid update received")
+        return {"status": "ok"}
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+        return {"status": "error", "message": str(e)}, 500
+
+# Flask: Тестовый маршрут
 @app.route("/test")
 def test():
     logger.info("Accessed test route")
-    webhook_info = application.bot.get_webhook_info() if application else None
     return {
         "status": "ok",
         "token_set": TOKEN != "YOUR_BOT_TOKEN_HERE",
-        "webhook_set": webhook_info.url if webhook_info else False
+        "webhook_active": init_bot()
     }
 
 # Flask: Ручная установка webhook
 @app.route("/setwebhook")
 def set_webhook_manual():
     logger.info("Accessed setwebhook route")
-    if not application:
-        logger.error("Application not initialized")
+    if not init_bot():
         return {"status": "error", "message": "Application not initialized"}, 500
     try:
         webhook_url = "https://cars-dun-phi.vercel.app/webhook"
@@ -104,10 +120,7 @@ def api_cars():
         JWT_TOKEN = get_jwt()
         if not JWT_TOKEN:
             return {"error": "Failed to obtain JWT"}, 500
-    headers = {
-        "accept": "application/json",
-        "Authorization": f"Bearer {JWT_TOKEN}"
-    }
+    headers = {"accept": "application/json", "Authorization": f"Bearer {JWT_TOKEN}"}
     try:
         response = requests.get("https://carapi.app/api/models/v2", headers=headers, timeout=10)
         logger.info(f"API response status: {response.status_code}, content: {response.text[:500]}... (truncated)")
@@ -125,7 +138,7 @@ def api_cars():
         logger.error(f"API error: {str(e)}")
         return {"error": str(e)}, 500
 
-# Flask: Mini App теперь перенаправляет на React
+# Flask: Mini App
 @app.route("/webapp")
 def webapp():
     logger.info("Redirecting to React app")
@@ -135,25 +148,6 @@ def webapp():
 @app.route('/<path:path>')
 def static_proxy(path):
     return app.send_static_file(path)
-
-# Telegram: Webhook
-@app.route("/webhook", methods=["POST"])
-async def webhook():
-    logger.info("Received webhook update")
-    try:
-        if not application:
-            logger.error("Application not initialized")
-            return {"status": "error", "message": "Application not initialized"}, 500
-        update = Update.de_json(request.get_json(), application.bot)
-        if update:
-            await application.process_update(update)
-            logger.info("Update processed successfully")
-        else:
-            logger.warning("Invalid update received")
-        return {"status": "ok"}
-    except Exception as e:
-        logger.error(f"Webhook error: {e}")
-        return {"status": "error", "message": str(e)}, 500
 
 # Telegram: /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -181,20 +175,15 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not JWT_TOKEN:
             await update.message.reply_text("Ошибка аутентификации. Проверь токены.")
             return
-    headers = {
-        "accept": "application/json",
-        "Authorization": f"Bearer {JWT_TOKEN}"
-    }
-    params = {
-        "json": json.dumps([
-            {"field": "make", "op": "in", "val": [brand] if brand else []},
-            {"field": "year", "op": ">=", "val": year_range[0]},
-            {"field": "year", "op": "<=", "val": year_range[1]},
-            {"field": "price", "op": ">=", "val": price_range[0]},
-            {"field": "price", "op": "<=", "val": price_range[1]},
-            {"field": "type", "op": "in", "val": [car_type] if car_type else []}
-        ])
-    }
+    headers = {"accept": "application/json", "Authorization": f"Bearer {JWT_TOKEN}"}
+    params = {"json": json.dumps([
+        {"field": "make", "op": "in", "val": [brand] if brand else []},
+        {"field": "year", "op": ">=", "val": year_range[0]},
+        {"field": "year", "op": "<=", "val": year_range[1]},
+        {"field": "price", "op": ">=", "val": price_range[0]},
+        {"field": "price", "op": "<=", "val": price_range[1]},
+        {"field": "type", "op": "in", "val": [car_type] if car_type else []}
+    ])}
     try:
         response = requests.get("https://carapi.app/api/models/v2", headers=headers, params=params, timeout=10)
         cars = response.json().get("data", [])
@@ -214,10 +203,7 @@ async def list_cars(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not JWT_TOKEN:
             await update.message.reply_text("Ошибка аутентификации. Проверь токены.")
             return
-    headers = {
-        "accept": "application/json",
-        "Authorization": f"Bearer {JWT_TOKEN}"
-    }
+    headers = {"accept": "application/json", "Authorization": f"Bearer {JWT_TOKEN}"}
     try:
         response = requests.get("https://carapi.app/api/models/v2", headers=headers, params={"limit": 5}, timeout=10)
         cars = response.json().get("data", [])
@@ -247,10 +233,7 @@ async def game(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not JWT_TOKEN:
             await update.message.reply_text("Ошибка аутентификации. Проверь токены.")
             return
-    headers = {
-        "accept": "application/json",
-        "Authorization": f"Bearer {JWT_TOKEN}"
-    }
+    headers = {"accept": "application/json", "Authorization": f"Bearer {JWT_TOKEN}"}
     try:
         response = requests.get("https://carapi.app/api/models/v2", headers=headers, params={"limit": 10}, timeout=10)
         cars = response.json().get("data", [])
@@ -286,10 +269,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if not JWT_TOKEN:
                 await query.message.reply_text("Ошибка аутентификации. Проверь токены.")
                 return
-        headers = {
-            "accept": "application/json",
-            "Authorization": f"Bearer {JWT_TOKEN}"
-        }
+        headers = {"accept": "application/json", "Authorization": f"Bearer {JWT_TOKEN}"}
         params = {"json": json.dumps([{"field": "make", "op": "in", "val": [brand]}])}
         try:
             response = requests.get("https://carapi.app/api/models/v2", headers=headers, params=params, timeout=10)
@@ -305,10 +285,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if not JWT_TOKEN:
                 await query.message.reply_text("Ошибка аутентификации. Проверь токены.")
                 return
-        headers = {
-            "accept": "application/json",
-            "Authorization": f"Bearer {JWT_TOKEN}"
-        }
+        headers = {"accept": "application/json", "Authorization": f"Bearer {JWT_TOKEN}"}
         try:
             response = requests.get("https://carapi.app/api/models/v2", headers=headers, params={"page": page, "limit": 5}, timeout=10)
             cars = response.json().get("data", [])
@@ -322,33 +299,21 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "wrong":
         await query.message.reply_text("Неправильно, попробуй ещё!")
 
-# Настройка webhook
-async def set_webhook():
-    webhook_url = "https://cars-dun-phi.vercel.app/webhook"
-    logger.info(f"Setting webhook: {webhook_url}")
-    if not application:
-        logger.error("Application not initialized")
-        raise Exception("Application not initialized")
-    await application.bot.setWebhook(webhook_url)
-
 # Инициализация
 def main():
     logger.info("Starting bot initialization")
-    if not application:
-        logger.error("Application not initialized, skipping handlers")
-        return
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("search", search))
-    application.add_handler(CommandHandler("list", list_cars))
-    application.add_handler(CommandHandler("help", help_command))
-    application.add_handler(CommandHandler("game", game))
-    application.add_handler(CallbackQueryHandler(button))
-    import asyncio
-    try:
-        asyncio.run(set_webhook())
-        logger.info("Webhook set successfully")
-    except Exception as e:
-        logger.error(f"Failed to set webhook: {e}")
+    if init_bot():
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("search", search))
+        application.add_handler(CommandHandler("list", list_cars))
+        application.add_handler(CommandHandler("help", help_command))
+        application.add_handler(CommandHandler("game", game))
+        application.add_handler(CallbackQueryHandler(button))
+        import asyncio
+        asyncio.run(application.bot.setWebhook("https://cars-dun-phi.vercel.app/webhook"))
+        logger.info("Webhook and handlers set successfully")
+    else:
+        logger.error("Bot initialization failed, handlers not added")
 
 # Запуск Flask
 if __name__ == "__main__":
