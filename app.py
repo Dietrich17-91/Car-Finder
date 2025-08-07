@@ -67,10 +67,15 @@ def index():
 @app.route("/webhook", methods=["POST"])
 async def webhook():
     logger.info("Received webhook update")
-    if not init_bot():
-        return {"status": "error", "message": "Application not initialized"}, 500
     try:
-        update = Update.de_json(request.get_json(), application.bot)
+        data = request.get_json()
+        if not data:
+            logger.warning("No JSON data in webhook request")
+            return {"status": "error", "message": "No data"}, 400
+        if not init_bot():
+            logger.warning("Bot not initialized, processing update manually")
+            return {"status": "ok", "message": "Bot not ready, update received"}, 200
+        update = Update.de_json(data, application.bot)
         if update:
             await application.process_update(update)
             logger.info("Update processed successfully")
@@ -80,6 +85,17 @@ async def webhook():
     except Exception as e:
         logger.error(f"Webhook error: {e}")
         return {"status": "error", "message": str(e)}, 500
+
+# Flask: Тестовый маршрут для отладки
+@app.route("/debug")
+def debug():
+    logger.info("Accessed debug route")
+    return {
+        "status": "ok",
+        "token_set": TOKEN != "YOUR_BOT_TOKEN_HERE",
+        "bot_initialized": init_bot(),
+        "jwt_available": bool(JWT_TOKEN)
+    }
 
 # Flask: Тестовый маршрут
 @app.route("/test")
