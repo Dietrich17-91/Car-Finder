@@ -16,6 +16,8 @@ app = Flask(__name__)
 
 # Переменные окружения
 TOKEN = os.getenv("TOKEN", "YOUR_BOT_TOKEN_HERE")
+if TOKEN == "YOUR_BOT_TOKEN_HERE":
+    logger.error("TOKEN is not set in environment variables!")
 CARAPI_TOKEN = os.getenv("CARAPI_TOKEN", "YOUR_CARAPI_TOKEN")
 CARAPI_SECRET = os.getenv("CARAPI_SECRET", "YOUR_CARAPI_SECRET")
 JWT_TOKEN = None
@@ -26,8 +28,8 @@ def init_bot():
     global application
     if not application and TOKEN != "YOUR_BOT_TOKEN_HERE":
         try:
-            application = Application.builder().token(TOKEN).http_timeout(5).build()
-            logger.info("Telegram Application initialized successfully")
+            application = Application.builder().token(TOKEN).http_timeout(10).build()
+            logger.info(f"Telegram Application initialized with token: {TOKEN[:10]}... (truncated)")
             return True
         except Exception as e:
             logger.error(f"Failed to initialize Telegram Application: {e}")
@@ -72,6 +74,7 @@ async def webhook():
         if not data:
             logger.warning("No JSON data in webhook request")
             return {"status": "error", "message": "No data"}, 400
+        logger.info(f"Webhook data: {data}")
         if not init_bot():
             logger.warning("Bot not initialized, processing update manually")
             return {"status": "ok", "message": "Bot not ready, update received"}, 200
@@ -93,6 +96,7 @@ def debug():
     return {
         "status": "ok",
         "token_set": TOKEN != "YOUR_BOT_TOKEN_HERE",
+        "token_value": TOKEN[:10] + "..." if TOKEN != "YOUR_BOT_TOKEN_HERE" else "Not set",
         "bot_initialized": init_bot(),
         "jwt_available": bool(JWT_TOKEN)
     }
